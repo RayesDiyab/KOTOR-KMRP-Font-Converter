@@ -50,7 +50,7 @@ namespace KmrpFontConverter
             return 0;
         }
 
-        /// <summary>references.txt, made by tools/build_font_converter_data.py.</summary>
+        /// <summary>references.txt, made by make_data.py.</summary>
         public static Dictionary<string, Reference> Parse(string text)
         {
             var all = new Dictionary<string, Reference>();

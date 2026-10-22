@@ -193,7 +193,7 @@ namespace KmrpFontConverter
         public string Name, Resref, Text;
         public float Height;
         public Color Colour;
-        public Bitmap Hd;        // drawn in the HD Original font at 3x (build_font_converter_data.py)
+        public Bitmap Hd;        // drawn in the HD Original font at 3x (make_data.py)
     }
 
     internal sealed class TileDef

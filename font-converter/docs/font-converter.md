@@ -1,7 +1,7 @@
 # KMRP Font Converter
 
 > **Documentation standard.** This document follows
-> [`docs/documentation-standard.md`](documentation-standard.md). Read it before editing
+> [`docs/documentation-standard.md`](../../docs/documentation-standard.md). Read it before editing
 > this file, and check the result still meets it: measured claims only, every
 > site tabulated, rejected alternatives and corrections kept visible, and
 > anything untested labelled as untested.
@@ -14,13 +14,14 @@ its fonts are made for KMRP (section 4). **Not yet seen in the game, nor run und
 
 | File | What it is |
 | --- | --- |
-| `src/font-converter/FontConverter.cs` | The window: tiles, pop-ups, conversion thread, where the output goes |
-| `src/font-converter/FontSource.cs` | Reading font files through DirectWrite, by vtable; WOFF read directly |
-| `src/font-converter/Atlas.cs` | Glyph rasteriser and the atlas/TXI writer |
-| `src/font-converter/build.ps1` | Builds `dist\KMRP Font Converter.exe` with the .NET Framework 4 `csc` |
-| `src/font-converter/logos.html`, `logo-github.png`, `logo-deadlystream.png` | The pop-up's two marks in one colour, the installer's icon ink (92,165,250): GitHub's Octicons mark (MIT), rendered with Edge, headless, on transparency; and DeadlyStream's icon, Darth Nihilus' mask, from the HD picture the maintainer supplied on 2026-10-21, its brightest channel mapped to the blue (dark 16,42,92 to the ink to 176,214,255), the black around it and in its eyes made transparent, 182x256 |
-| `src/font-converter/kmrp-logo.png` | The logo, `tools/build_brand_image.py --text KMRP --tracking 0.12 --whole-crest`, 400x300 |
-| `tools/build_font_converter_data.py` | Makes `build/font-converter`: `references.txt`, `examples.txt` and the example PNGs, from `assets/hd-original-fonts` |
+| `font-converter/FontConverter.cs` | The window: tiles, pop-ups, conversion thread, where the output goes |
+| `font-converter/FontSource.cs` | Reading font files through DirectWrite, by vtable; WOFF read directly |
+| `font-converter/Atlas.cs` | Glyph rasteriser and the atlas/TXI writer |
+| `font-converter/build.ps1` | Builds `font-converter\dist\KMRP Font Converter.exe` with the .NET Framework 4 `csc`, from this folder alone; `-Refresh` remakes `data/` first |
+| `font-converter/logos.html`, `logo-github.png`, `logo-deadlystream.png` | The pop-up's two marks in one colour, the installer's icon ink (92,165,250): GitHub's Octicons mark (MIT), rendered with Edge, headless, on transparency; and DeadlyStream's icon, Darth Nihilus' mask, from the HD picture the maintainer supplied on 2026-10-21, its brightest channel mapped to the blue (dark 16,42,92 to the ink to 176,214,255), the black around it and in its eyes made transparent, 182x256 |
+| `font-converter/kmrp-logo.png` | The logo, `tools/build_brand_image.py --text KMRP --tracking 0.12 --whole-crest`, 400x300 |
+| `font-converter/make_data.py`, `font-converter/data/` | Makes `data/`: `references.txt`, `examples.txt` and the example PNGs, from KMRP's `assets/hd-original-fonts`; committed, so the converter builds without the rest of KMRP |
+| `font-converter/favicon.ico` | The window icon, a copy of `src/patcher/favicon.ico` |
 
 ## 2. What it writes
 
@@ -91,7 +92,7 @@ system sans; the dark title bar is skipped where DWM is missing.
 ## 4. Why KMRP is needed
 
 KMRP sizes Override fonts for the resolution and text size in use
-(`KmrpFontMetricsLoadedK1`, [ingame-text-options.md](ingame-text-options.md) section 3):
+(`KmrpFontMetricsLoadedK1`, [ingame-text-options.md](../../docs/ingame-text-options.md) section 3):
 it scales the five TXI metrics to the size its own font of that name is drawn at.
 Without KMRP the game draws these 6x atlases at their own size, six times too large.
 The pop-up at every start says so, with buttons to KMRP's DeadlyStream page and its

@@ -1,23 +1,26 @@
-# Builds dist\KMRP Font Converter.exe: one file, .NET Framework 4 (in every Windows since 8,
-# and in Wine's wine-mono under Proton), no other files.
+# Builds dist\KMRP Font Converter.exe beside this file: one file, .NET Framework 4 (in every
+# Windows since 8, and in Wine's wine-mono under Proton), no other files.
 #
-#   powershell -ExecutionPolicy Bypass -File src\font-converter\build.ps1 [-Python python]
+#   powershell -ExecutionPolicy Bypass -File font-converter\build.ps1 [-Refresh] [-Python python]
 #
-# The examples and font metrics it carries are made from assets\hd-original-fonts by
-# tools\build_font_converter_data.py (needs Pillow), then compiled in as resources.
-param([string]$Python = "python")
+# Everything it needs is in this folder, so it builds on its own, outside KMRP. The
+# examples and font metrics it carries are in data\, made from KMRP's (New) Original HD
+# Font by make_data.py (needs Pillow); -Refresh makes them again, from the KMRP checkout
+# this folder sits in (assets\hd-original-fonts), before compiling them in as resources.
+param([switch]$Refresh, [string]$Python = "python")
 $ErrorActionPreference = "Stop"
 
 $here = $PSScriptRoot
-$root = (Resolve-Path (Join-Path $here "..\..")).Path
-$data = Join-Path $root "build\font-converter"
-$dist = Join-Path $root "dist"
+$data = Join-Path $here "data"
+$dist = Join-Path $here "dist"
 $exe = Join-Path $dist "KMRP Font Converter.exe"
 $compiler = "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe"
 if (-not (Test-Path -LiteralPath $compiler)) { throw ".NET Framework C# compiler was not found at $compiler" }
 
-& $Python (Join-Path $root "tools\build_font_converter_data.py") $data
-if ($LASTEXITCODE -ne 0) { throw "build_font_converter_data.py failed" }
+if ($Refresh) {
+    & $Python (Join-Path $here "make_data.py") $data
+    if ($LASTEXITCODE -ne 0) { throw "make_data.py failed" }
+}
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
 $resources = @(
@@ -35,7 +38,7 @@ foreach ($png in Get-ChildItem -LiteralPath (Join-Path $data "examples") -Filter
 
 $sources = Get-ChildItem -LiteralPath $here -Filter *.cs | ForEach-Object { $_.FullName }
 & $compiler /nologo /optimize+ /target:winexe /platform:anycpu "/out:$exe" `
-    "/win32icon:$root\src\patcher\favicon.ico" `
+    "/win32icon:$here\favicon.ico" `
     /reference:System.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll /reference:System.Core.dll `
     $resources $sources
 if ($LASTEXITCODE -ne 0) { throw "The converter did not compile" }
