@@ -1,6 +1,7 @@
 # KMRP Original HD fonts
 
-Reference, 2026-10-22, following the [documentation standard](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/documentation-standard.md).
+Reference, 2026-10-22, following the [documentation standard](../docs/documentation-standard.md)
+(KMRP's, imported 2026-11-09).
 The lab record of how the redraw was reached is section 6 of this document. In KMRP's
 repository until 2026-11-08, then in the KOTOR-KMRP Font Converter's with the converter:
 `tools/`, `assets/` and `build/native-runtime` paths below are KMRP's, which the scripts in
@@ -169,6 +170,12 @@ underscore vanished at 16 px in the TrueType collection; it is now a bar.
   builder, `tools/build_hd_original_fonts.py`, stay in the repository as the record of
   how the atlases were first made; neither is part of any build now.
 - `fnt_galahad14`: game art, made at build time, never a font file.
+- The address in the files: their copyright (name ID 0 and the CFF Notice), vendor and
+  designer URLs (name IDs 11 and 12), all from `COPYRIGHT` and `VENDOR_URL` in
+  `tools/finish.py`, and `OFL.txt`'s first line name KMRP's repository, where the fonts
+  were made. Left as they are on the move here (2026-11-08): KMRP's page is still the
+  project's, and changing them changes every file and hash in section 1. The letters, and
+  so KMRP's atlases drawn from them, would not change.
 
 ## 6. Lab record: rejected along the way (2026-10-22)
 

@@ -1,7 +1,8 @@
 # KMRP Font Converter
 
 > **Documentation standard.** This document follows
-> [`docs/documentation-standard.md`](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/documentation-standard.md). Read it before editing
+> [`docs/documentation-standard.md`](../../docs/documentation-standard.md) (KMRP's, imported
+> 2026-11-09). Read it before editing
 > this file, and check the result still meets it: measured claims only, every
 > site tabulated, rejected alternatives and corrections kept visible, and
 > anything untested labelled as untested.
@@ -43,6 +44,7 @@ Split by job on 2026-11-08 (audit: the window was one 1,848-line file).
 | `build.ps1` | Builds `dist\KMRP Font Converter.exe` from this folder alone; `-Refresh` remakes `data/`; `-Release` the release zip (section 6) |
 | `kmrp-logo.png`, `kotor-logo.png` | The logo, `tools/build_brand_image.py --text KMRP --tracking 0.12 --whole-crest`, 714x535 made 400x300; the same with `--text KOTOR`, at the same scale, 486x302 (2026-11-08). The KMRP one remade this way is pixel for pixel the committed file |
 | `font-logo.png` | The repository README's logo, not built into the program: the same tool with `--text FONT`, at full size, 677x539 (2026-11-09) |
+| `release/make_press_kit.py`, `release/press-kit/` | The press kit's five pages, in the converter's own style, from screenshots kept out of the repository (its README says where each came from) |
 | `make_data.py`, `data/` | Makes `data/`: `references.txt`, `examples.txt` and the example PNGs, from KMRP's `assets/hd-original-fonts`; committed, so the converter builds without the rest of KMRP |
 | `favicon.ico` | The window icon, a copy of `src/patcher/favicon.ico` |
 | `settings.png` | The Settings button's gear: the installer's `src/patcher/icons/Settings.png` cropped to its ink and made 512 px, drawn in one colour from its alpha |
@@ -239,9 +241,18 @@ the .NET Framework's, which warns that the hash will differ.
 | --- | ---: | --- |
 | 1.0.0 exe, 2026-11-08, sources uncommitted | 1,113,088 | `30643C4AA241B1B19B14052E21D6D32E99A34E2FDB7EF4BF9858131F15032526` |
 | its zip, `KMRP-Font-Converter-1.0.0.zip` | 791,587 | `279E88BCE48157900BB304B313AB9C7D5D4BC8350BA7AA5E1D9F5166E8D3965F` |
+| 1.0.0 exe, 2026-11-09, built from commit `a0cf97f` in this repository | 1,113,088 | `30643C4AA241B1B19B14052E21D6D32E99A34E2FDB7EF4BF9858131F15032526`, the same |
+| its zip, 2026-11-09, with the corrected `README.txt` and notices below | 791,603 | `686E47908B0CE63E609FC44468B34B62EC874E92F622D2AD25EE333F32CE8F45` |
 
 The zip holds file times, so it differs at every build; the exe inside does not. The
-release build's identity is recorded here when it is made from committed sources.
+committed sources give the exe recorded on 2026-11-08 byte for byte, so that SHA-256 is
+the 1.0.0 release's.
+
+*Corrected 2026-11-09:* the zip of 2026-11-08 carried a `README.txt` saying the source is
+"in the KMRP repository above, in the font-converter folder" and notices linking to KMRP's
+`fonts/` folder; both were written before the move to this repository and not looked at
+after it. Both now name this repository. The exe does not carry either text and is
+unchanged.
 
 ## 7. Verifying
 

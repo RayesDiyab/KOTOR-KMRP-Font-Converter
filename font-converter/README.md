@@ -9,6 +9,7 @@ no other files; it is meant to run under Wine and Proton too (not yet tried).
   the readme in the release zip.
 - How it works and what it writes: [docs/font-converter.md](docs/font-converter.md).
 - Its release audit: [docs/release-audit-2026-11-08.md](docs/release-audit-2026-11-08.md).
+- The standard these documents are held to: [docs/documentation-standard.md](../docs/documentation-standard.md).
 
 ## Building
 

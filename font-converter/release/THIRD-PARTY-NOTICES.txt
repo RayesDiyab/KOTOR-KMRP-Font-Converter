@@ -10,7 +10,7 @@ Fonts carried in the program
 KMRP Original HD Menu and KMRP Original HD Descriptions, as TrueType, set the window's
 text. They are KMRP's own fonts, Copyright (c) 2026, RaymanGT, under the SIL Open Font
 License 1.1 (OFL.txt, beside this file). No Reserved Font Name.
-https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/tree/master/fonts
+https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/tree/master/fonts
 
 The pictures of example text on the tiles are drawn in the same KMRP Original HD fonts.
 

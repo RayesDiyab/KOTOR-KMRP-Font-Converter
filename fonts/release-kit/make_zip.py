@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[2]   # this repository
 KIT = Path(__file__).resolve().parent
 SRC = ROOT / "fonts"
 STAGE = ROOT / "build" / "fonts-upload" / "stage" / "KMRP Original HD Fonts"
-ZIP = KIT / "KMRP-Original-HD-Fonts-1.600.zip"
+ZIP = KIT / "KMRP-Original-HD-Fonts.zip"   # the committed name; the version is in README.txt
 
 (STAGE / "otf").mkdir(parents=True, exist_ok=True)
 files = sorted((SRC / "otf").glob("*.otf"))

@@ -1,10 +1,16 @@
 # KMRP Font Converter: release audit, 2026-11-08
 
 > **Documentation standard.** This document follows
-> [`docs/documentation-standard.md`](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/documentation-standard.md): measured claims
-> only, every site tabulated, and anything untested labelled as untested.
+> [`docs/documentation-standard.md`](../../docs/documentation-standard.md) (KMRP's, imported
+> 2026-11-09): measured claims only, every site tabulated, and anything untested labelled
+> as untested.
 
-Audit of `font-converter/` for a public release, at master `c5ae24d` plus the uncommitted
+**Lab record**, kept as it was found; what the converter is now is in its reference,
+[font-converter.md](font-converter.md). Paths and line numbers (`FontConverter.cs:588`)
+are those of KMRP's repository at `c5ae24d`, before the window was split into nine files
+and before the move to this repository; they do not match the files here.
+
+Audit of `font-converter/` for a public release, at KMRP's master `c5ae24d` plus the uncommitted
 Override-font work of the same day. Nothing was changed by the audit. Three read-only code
 reviews (font reading and atlas code; the window and file handling; release, licences and
 docs), a run of a freshly built copy over 19 inputs, and a side-by-side look at the KOTOR

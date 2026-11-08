@@ -6,7 +6,8 @@ menus, the dialogue, the journal, the HUD's numbers and the end credits, each in
 font you pick. For KMRP (the KOTOR Modern Restoration Patch) or for the original game.
 
 Made by RaymanGT.
-https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch
+The converter:  https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter
+KMRP:           https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch
 
 
 What you need
@@ -76,8 +77,8 @@ Licence
 -------
 
 The KMRP Font Converter is free software under the GNU General Public License,
-version 3 or later (LICENSE.txt). Its source is in the KMRP repository above, in the
-font-converter folder.
+version 3 or later (LICENSE.txt). Its source is in the KOTOR-KMRP Font Converter
+repository above, in the font-converter folder.
 
 The window's text is set in KMRP Original HD Menu and Descriptions, under the SIL Open
 Font License 1.1 (OFL.txt). Other credits are in THIRD-PARTY-NOTICES.txt.

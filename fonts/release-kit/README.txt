@@ -7,6 +7,8 @@ the game's own fonts, so text set in them lines up as it does in KOTOR.
 
 Made by RaymanGT for KMRP, the KOTOR Modern Restoration Patch:
 https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch
+The fonts' own home, with how they were made:
+https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter
 
 
 License

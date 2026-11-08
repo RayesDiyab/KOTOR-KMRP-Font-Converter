@@ -4,6 +4,9 @@ Release art for the KMRP Font Converter 1.0 (released with KMRP 1.6.0): the cove
 pages for mod pages, posts and articles, in the converter's own style. Use them as they are;
 please do not crop a frame out of its page without saying what it shows.
 
+Held to the [documentation standard](../../../docs/documentation-standard.md): where each
+frame came from is said below.
+
 Five pages, in the order to show them.
 
 | File | What |

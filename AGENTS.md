@@ -10,8 +10,10 @@ are drawn from: https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patc
    Author identity: `Rayes Diyab <114070898+RayesDiyab@users.noreply.github.com>`.
 3. **Never commit game files**: no atlas, texture or save of the game's, and no picture made
    from the game's own letters without asking. The fonts in `fonts/` are KMRP's own.
-4. **Measure, then claim.** Docs follow KMRP's documentation standard: measured claims only,
-   corrections kept visible with their date, anything untested said to be untested.
+4. **Measure, then claim.** Docs follow [`docs/documentation-standard.md`](docs/documentation-standard.md),
+   imported from KMRP's: measured claims only, corrections kept visible with their date,
+   anything untested said to be untested. Run `python .github/scripts/check_links.py`
+   before committing a document.
 5. **Test before saying it works:** `python tests\Test-FontConverter.py` after any change to
    `font-converter/`; for the fonts, KMRP's `tools/build_hd_original_atlases.py --check`.
 6. **Plain ASCII in sources**; non-ASCII characters in C# strings as `\uXXXX`. Write files
