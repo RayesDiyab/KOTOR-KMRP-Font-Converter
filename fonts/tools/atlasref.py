@@ -9,7 +9,10 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]       # the KMRP checkout
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "tools"))
+from kmrp_checkout import kmrp_root  # noqa: E402
+ROOT = kmrp_root()                               # the KMRP checkout (since 2026-11-08 beside this repository)
 sys.path.insert(0, str(ROOT / "tools"))
 from build_font_from_ttf import slot_character  # noqa: E402
 from build_hd_original_fonts import SCALE, Stock  # noqa: E402

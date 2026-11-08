@@ -1,0 +1,309 @@
+#!/usr/bin/env python3
+"""The KMRP Font Converter, run: every font type into both versions, and what it must refuse.
+
+Builds font-converter/dist with font-converter/build.ps1 (unless --no-build), then runs the
+program with --convert --exit --out=<an empty folder> and checks what it wrote, as
+docs (font-converter/docs/release-audit-2026-11-08.md, "How it was tested") describe:
+
+  * every input below, for KMRP (--version=kmrp) and the original game (--version=original):
+    all 17 .tga/.txi pairs; TGA type 2 at 32 bits, full length, at most 4096 square; the
+    TXI's texturewidth the atlas's width, every cell inside the atlas, none zero wide from
+    slot 32 up, no comma in a number; the dialogue font's A has ink. For KMRP the heights are
+    the HD Original font's; for the original game a sixth of them, the atlas a power of two,
+    and (when build/native-runtime/original-fonts holds the game's own) fontheight and
+    baselineheight equal to the game's;
+  * refused, nothing written, exit code 1: random bytes, an empty file, a font with no Latin
+    letters, a WOFF whose table claims 2 GB;
+  * a .tpc already set aside is not lost: the next one is set aside as -2;
+  * a read-only file in the folder stops the conversion before anything changes;
+  * the window closed while converting: nothing written, no work folder left.
+
+No game, Override or setting of the player's is touched: every run writes into a folder
+under build/font-converter-check, with --version and --out, which are not remembered.
+"""
+import argparse
+import ctypes
+import ctypes.wintypes as wt
+import os
+import shutil
+import stat
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+CONVERTER = ROOT / "font-converter"
+EXE = CONVERTER / "dist" / "KMRP Font Converter.exe"
+WORK = ROOT / "build" / "font-converter-check"
+FONTS = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
+sys.path.insert(0, str(ROOT / "tools"))
+from kmrp_checkout import kmrp_root  # noqa: E402
+# The game's own font atlases a KMRP build copies: compared against when a KMRP checkout is
+# beside this repository and has been built.
+_KMRP = kmrp_root(required=False)
+ORIGINALS = (_KMRP / "build" / "native-runtime" / "original-fonts") if _KMRP else ROOT / "build" / "no-kmrp"
+TILES = ["menu", "menusmall", "menusmallb", "menumedium", "menularge", "dialogue", "descriptions",
+         "light", "console", "credits", "creditsb"]
+NAMES = ["dialogfont10x10", "dialogfont10x10a", "dialogfont10x10b", "dialogfont12x16", "dialogfont16x16",
+         "dialogfont16x16a", "dialogfont16x16b", "dialogfont32x32", "fnt_console", "fnt_credits", "fnt_creditsa",
+         "fnt_creditsb", "fnt_d10x10b", "fnt_d16x16", "fnt_d16x16a", "fnt_d16x16b", "fnt_dialog16x16"]
+# The order tools/build_scaled_fonts.py FONT_RESREFS gives the game's fonts (kmrfogNN).
+GAME_ORDER = ["dialogfont10x10", "dialogfont10x10a", "dialogfont10x10b", "dialogfont12x16", "dialogfont16x16",
+              "dialogfont16x16a", "dialogfont16x16b", "dialogfont32x32", "fnt_console", "fnt_credits", "fnt_creditsa",
+              "fnt_creditsb", "fnt_d10x10b", "fnt_d16x16", "fnt_d16x16a", "fnt_d16x16b", "fnt_dialog16x16", "fnt_galahad14"]
+
+failures = []
+
+
+def check(condition, message):
+    if not condition:
+        failures.append(message)
+        print("FAIL", message)
+    return condition
+
+
+def references():
+    """The HD Original font's TXI headers, as the converter carries them (data/references.txt)."""
+    refs, cur = {}, None
+    for line in (CONVERTER / "data" / "references.txt").read_text(encoding="ascii").splitlines():
+        p = line.split()
+        if line.startswith("font "):
+            cur = refs[p[1]] = {}
+        elif len(p) == 2:
+            cur[p[0]] = float(p[1])
+    return refs
+
+
+def txi(path):
+    lines = [l.split() for l in path.read_text(encoding="latin-1").splitlines() if l.strip()]
+    head = {l[0]: l[1] for l in lines if len(l) == 2}
+    up = next(i for i, l in enumerate(lines) if l[0] == "upperleftcoords")
+    lo = next(i for i, l in enumerate(lines) if l[0] == "lowerrightcoords")
+    n = int(float(head["numchars"]))
+    cells = [tuple(map(float, lines[up + 1 + c][:2])) + tuple(map(float, lines[lo + 1 + c][:2])) for c in range(n)]
+    return head, cells, path.read_text(encoding="latin-1")
+
+
+def game_txi(name):
+    path = ORIGINALS / f"kmrfog{GAME_ORDER.index(name):02d}.txi"
+    if not path.exists():
+        return None
+    head = {}
+    for line in path.read_text(encoding="latin-1").replace("\r", "\n").splitlines():
+        p = line.split()
+        if len(p) == 2:
+            try:
+                head[p[0]] = float(p[1])
+            except ValueError:
+                pass
+    return head
+
+
+def run(folder, args, timeout=90):
+    """The converter with these arguments into `folder`; its exit code."""
+    if folder.exists():
+        shutil.rmtree(folder, onerror=lambda f, p, e: (os.chmod(p, stat.S_IWRITE), f(p)))
+    folder.mkdir(parents=True)
+    p = subprocess.run([str(EXE), "--convert", "--exit", f"--out={folder}"] + args, timeout=timeout)
+    return p.returncode
+
+
+def check_set(folder, version, label, refs):
+    from PIL import Image
+    ok = True
+    for name in NAMES:
+        tga_path, txi_path = folder / f"{name}.tga", folder / f"{name}.txi"
+        if not check(tga_path.exists() and txi_path.exists(), f"{label}: {name} missing"):
+            ok = False
+            continue
+        tga = tga_path.read_bytes()
+        w, h = tga[12] | tga[13] << 8, tga[14] | tga[15] << 8
+        ok &= check(tga[2] == 2 and tga[16] == 32, f"{label}: {name} TGA type {tga[2]} at {tga[16]} bits")
+        ok &= check(len(tga) >= 18 + w * h * 4, f"{label}: {name} TGA short")
+        ok &= check(w == h and w <= 4096, f"{label}: {name} atlas {w}x{h}")
+        head, cells, text = txi(txi_path)
+        ok &= check("," not in text, f"{label}: {name} has a comma in a number")
+        ok &= check(abs(float(head["texturewidth"]) * 100 - w) < 0.6, f"{label}: {name} texturewidth {head['texturewidth']} for {w}")
+        outside = [c for c, (x0, y0, x1, y1) in enumerate(cells) if not (0 <= x0 <= x1 <= 1.0001 and 0 <= y1 <= y0 <= 1.0001)]
+        ok &= check(not outside, f"{label}: {name} cells outside the atlas: {outside[:5]}")
+        zero = [c for c, (x0, _, x1, _) in enumerate(cells) if c >= 32 and round((x1 - x0) * w) <= 0]
+        ok &= check(not zero, f"{label}: {name} zero-wide cells: {zero[:5]}")
+        ref = refs[name]
+        divisor = 6 if version == "original" else 1
+        for key in ("fontheight", "baselineheight"):
+            ok &= check(abs(float(head[key]) - ref[key] / divisor) < 1e-6, f"{label}: {name} {key} {head[key]}, wanted {ref[key] / divisor:.6f}")
+        if version == "original":
+            ok &= check(w & (w - 1) == 0, f"{label}: {name} atlas {w} not a power of two")
+            game = game_txi(name)
+            if game:
+                for key in ("fontheight", "baselineheight"):
+                    ok &= check(abs(float(head[key]) - game[key]) < 1e-6, f"{label}: {name} {key} {head[key]} against the game's {game[key]}")
+        if name == "fnt_d16x16":
+            x0, y0, x1, y1 = cells[ord("A")]
+            img = Image.open(tga_path)
+            box = (round(x0 * w), round((1 - y0) * h), round(x1 * w), round((1 - y1) * h))
+            ok &= check(img.crop(box).getchannel("A").getextrema()[1] > 200, f"{label}: the dialogue font's A has no ink")
+    leftovers = [p.name for p in folder.iterdir() if p.name.startswith(".kmrp-font-converter-")]
+    ok &= check(not leftovers, f"{label}: work folder left: {leftovers}")
+    return ok
+
+
+def inputs():
+    """Test fonts made from the system's: WOFF and WOFF2 of Arial, a font with no letters, a
+    WOFF lying about its size, random bytes and an empty file."""
+    from fontTools.ttLib import TTFont
+    from fontTools import subset
+    folder = WORK / "inputs"
+    folder.mkdir(parents=True, exist_ok=True)
+    made = {}
+    for flavor in ("woff", "woff2"):
+        out = folder / f"arial.{flavor}"
+        if not out.exists():
+            try:
+                f = TTFont(FONTS / "arial.ttf")
+                f.flavor = flavor
+                f.save(out)
+            except Exception as e:      # WOFF2 needs the brotli module
+                print(f"skip {flavor}: {e}")
+                continue
+        made[flavor] = out
+    digits = folder / "digits-only.ttf"
+    if not digits.exists():
+        options = subset.Options()
+        font = subset.load_font(str(FONTS / "arial.ttf"), options)
+        s = subset.Subsetter(options)
+        s.populate(text="0123456789")
+        s.subset(font)
+        subset.save_font(font, str(digits), options)
+    made["digits"] = digits
+    if "woff" in made:
+        w = bytearray(made["woff"].read_bytes())
+        w[44 + 12:44 + 16] = (0x7FFFFFFF).to_bytes(4, "big")
+        (folder / "huge.woff").write_bytes(bytes(w))
+        made["huge"] = folder / "huge.woff"
+    (folder / "random.ttf").write_bytes(os.urandom(65536))
+    (folder / "empty.ttf").write_bytes(b"")
+    made["random"], made["empty"] = folder / "random.ttf", folder / "empty.ttf"
+    return made
+
+
+def close_while_converting(spec):
+    """WM_CLOSE to the window while it converts: it must stop, write nothing and exit."""
+    user32 = ctypes.WinDLL("user32")
+    folder = WORK / "close"
+    if folder.exists():
+        shutil.rmtree(folder)
+    folder.mkdir(parents=True)
+    p = subprocess.Popen([str(EXE), "--convert", f"--out={folder}", "--version=kmrp"] + [f"{t}={spec}" for t in TILES])
+    found = []
+
+    @ctypes.WINFUNCTYPE(wt.BOOL, wt.HWND, wt.LPARAM)
+    def enum(hwnd, _):
+        pid = wt.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if pid.value == p.pid and user32.IsWindowVisible(hwnd):
+            found.append(hwnd)
+        return True
+    deadline = time.time() + 30
+    # Close once the conversion has started: the work folder is there.
+    while time.time() < deadline and not any(x.name.startswith(".kmrp-font-converter-") for x in folder.iterdir()):
+        time.sleep(0.02)
+    user32.EnumWindows(enum, 0)
+    if found:
+        user32.PostMessageW(found[0], 0x0010, 0, 0)   # WM_CLOSE
+    try:
+        p.wait(timeout=60)
+    except subprocess.TimeoutExpired:
+        p.kill()
+        check(False, "close while converting: the program did not exit")
+        return
+    left = sorted(x.name for x in folder.iterdir())
+    check(bool(found), "close while converting: no window found")
+    check(not left, f"close while converting: left in the folder: {left[:6]}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--no-build", action="store_true")
+    args = parser.parse_args()
+    if not args.no_build:
+        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(CONVERTER / "build.ps1")], check=True)
+    WORK.mkdir(parents=True, exist_ok=True)
+    refs = references()
+    made = inputs()
+    good = [
+        ("arial", str(FONTS / "arial.ttf")),
+        ("kmrp-otf-cff", str(ROOT / "fonts" / "otf" / "KMRP-OriginalHD-Dialogue.otf")),
+        ("cambria-ttc", str(FONTS / "cambria.ttc") + "#Cambria"),
+        ("bahnschrift-variable", str(FONTS / "bahnschrift.ttf")),
+        ("georgia", str(FONTS / "georgia.ttf")),
+    ] + [(k, str(v)) for k, v in made.items() if k in ("woff", "woff2")]
+    for name, spec in good:
+        if not Path(spec.split("#")[0]).exists():
+            print(f"skip {name}: not on this machine")
+            continue
+        for version in ("kmrp", "original"):
+            label = f"{name} for {version}"
+            folder = WORK / f"{name}-{version}"
+            t0 = time.time()
+            code = run(folder, [f"--version={version}"] + [f"{t}={spec}" for t in TILES])
+            if check(code == 0, f"{label}: exit code {code}") and check_set(folder, version, label, refs):
+                print(f"ok    {label}: 34 files in {time.time() - t0:.1f} s")
+            shutil.rmtree(folder, ignore_errors=True)
+
+    for name in ("random", "empty", "digits", "huge"):
+        if name not in made:
+            continue
+        folder = WORK / f"refuse-{name}"
+        code = run(folder, ["--version=kmrp", f"dialogue={made[name]}"], timeout=60)
+        left = list(folder.iterdir())
+        if check(code == 1 and not left, f"refuse {name}: exit {code}, {len(left)} files written"):
+            print(f"ok    refused {name}: nothing written")
+        shutil.rmtree(folder, ignore_errors=True)
+
+    # A .tpc set aside earlier is kept; this one is set aside as -2.
+    folder = WORK / "tpc"
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    (folder / "fnt_d16x16.tpc").write_bytes(b"new mod")
+    (folder / "fnt_d16x16.tpc.before-font-converter").write_bytes(b"earlier mod")
+    code = subprocess.run([str(EXE), "--convert", "--exit", f"--out={folder}", "--version=kmrp", f"dialogue={FONTS / 'arial.ttf'}"], timeout=90).returncode
+    if check(code == 0, f"tpc: exit {code}") and \
+       check((folder / "fnt_d16x16.tpc.before-font-converter").read_bytes() == b"earlier mod", "tpc: the earlier copy was changed") and \
+       check((folder / "fnt_d16x16.tpc.before-font-converter-2").read_bytes() == b"new mod", "tpc: the new one was not set aside as -2") and \
+       check(not (folder / "fnt_d16x16.tpc").exists() and (folder / "fnt_d16x16.tga").exists(), "tpc: not replaced"):
+        print("ok    a .tpc set aside before is kept; the next one is set aside as -2")
+    shutil.rmtree(folder, ignore_errors=True)
+
+    # A read-only file stops the conversion before anything moves.
+    folder = WORK / "readonly"
+    shutil.rmtree(folder, ignore_errors=True)
+    folder.mkdir(parents=True)
+    old = folder / "fnt_d16x16.txi"
+    old.write_text("old\n")
+    os.chmod(old, stat.S_IREAD)
+    (folder / "dialogfont16x16.tpc").write_bytes(b"keep")
+    code = subprocess.run([str(EXE), "--convert", "--exit", f"--out={folder}", "--version=kmrp",
+                           f"menu={FONTS / 'arial.ttf'}", f"dialogue={FONTS / 'arial.ttf'}"], timeout=90).returncode
+    names = sorted(p.name for p in folder.iterdir())
+    if check(code == 1, f"read-only: exit {code}") and \
+       check(names == ["dialogfont16x16.tpc", "fnt_d16x16.txi"], f"read-only: the folder changed: {names}"):
+        print("ok    a read-only file stops the conversion with nothing changed")
+    os.chmod(old, stat.S_IWRITE)
+    shutil.rmtree(folder, ignore_errors=True)
+
+    close_while_converting(str(FONTS / "arial.ttf"))
+    if not any(f.startswith("close") for f in failures):
+        print("ok    closed while converting: stopped, nothing written")
+
+    print()
+    if failures:
+        print(f"{len(failures)} failed")
+        return 1
+    print("all checks passed")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

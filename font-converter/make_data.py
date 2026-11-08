@@ -23,13 +23,17 @@ from __future__ import annotations
 
 import argparse
 import re
+import sys
 from pathlib import Path
 
 from PIL import Image
 
 HERE = Path(__file__).resolve().parent
 # The KMRP checkout this folder sits in.
-HD = HERE.parent / "assets" / "hd-original-fonts"
+sys.path.insert(0, str(HERE.parent / "tools"))
+from kmrp_checkout import kmrp_root  # noqa: E402
+# KMRP's HD Original atlases: in the KMRP checkout beside this repository (2026-11-08).
+HD = kmrp_root() / "assets" / "hd-original-fonts"
 
 # The 17 fonts the converter writes: the game's 18 less fnt_galahad14, which is game art
 # made at build time and never a text font the player sees in menus.

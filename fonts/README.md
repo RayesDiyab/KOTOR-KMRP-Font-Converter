@@ -1,7 +1,10 @@
 # KMRP Original HD fonts
 
-Reference, 2026-10-22, following the [documentation standard](../docs/documentation-standard.md).
-The lab record of how the redraw was reached is section 6 of this document.
+Reference, 2026-10-22, following the [documentation standard](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/documentation-standard.md).
+The lab record of how the redraw was reached is section 6 of this document. In KMRP's
+repository until 2026-11-08, then in the KOTOR-KMRP Font Converter's with the converter:
+`tools/`, `assets/` and `build/native-runtime` paths below are KMRP's, which the scripts in
+`fonts/tools` find beside this repository or through `KMRP_ROOT` (`tools/kmrp_checkout.py`).
 
 KOTOR's own fonts in high resolution, as 11 OpenType (CFF) files and one TrueType
 collection holding all 11 (`KMRP-OriginalHD.ttc`): the letters of KMRP's (New) Original
@@ -143,10 +146,6 @@ Windows' CFF rasteriser left W, w and @ blank at 7680 units per em (and the view
 every sample line holding one); at 1000 every character draws. The fonts were then
 rebuilt to the recommendations of section 1 rather than patched. (3) MenuSmall's
 underscore vanished at 16 px in the TrueType collection; it is now a bar.
-
-Untested: how the hints look on Windows' and macOS's own renderers beyond GDI's
-anti-aliased output above; the fonts in programs other than the font viewer, the save
-editor and KMRP's own atlas builder.
 
 ## 4. Limits
 

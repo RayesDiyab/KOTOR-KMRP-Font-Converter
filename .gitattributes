@@ -1,0 +1,42 @@
+# Line endings.
+#
+# Deliberately NOT `* text=auto`: this repository already holds files committed
+# with mixed endings, and a blanket rule would renormalise them all in one
+# unrelated commit and bury real changes. Text types are declared explicitly as
+# they are cleaned up instead.
+*.md        text
+*.py        text
+*.cs        text
+*.ps1       text eol=crlf
+*.txt       text
+*.json      text
+*.tsv       text
+*.yml       text
+*.yaml      text
+*.asm       text
+# Run by bash in WSL (tools/build_linux_installer.ps1): a CRLF checkout would break it.
+tools/build_linux_appimage.sh text eol=lf
+
+# Binary. Without these git may try to diff or merge them, and a mangled GUI or
+# texture is not obvious until it is in the game.
+*.gui       binary
+*.tga       binary
+*.tpc       binary
+*.2da       binary
+*.erf       binary
+*.bin       binary
+*.png       binary
+*.ico       binary
+*.docx      binary
+*.pdf       binary
+*.zip       binary
+*.kup       binary
+# The LZMA SDK's decoder, byte for byte as Igor Pavlov ships it (CRLF), so its
+# SHA-256s in third_party/lzma-sdk/README.md hold on every checkout.
+third_party/lzma-sdk/*.c -text
+third_party/lzma-sdk/*.h -text
+
+# Keep generated/vendored trees out of language stats and collapsed in diffs.
+third_party/**            linguist-vendored
+testing/virtual-display/** linguist-vendored
+assets/**                 linguist-generated

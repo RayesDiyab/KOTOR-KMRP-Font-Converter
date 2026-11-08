@@ -1,0 +1,36 @@
+KMRP Font Converter: what is in it, and whose
+=============================================
+
+Everything in the program is the KMRP project's own, made by RaymanGT, except where this
+file says otherwise.
+
+Fonts carried in the program
+----------------------------
+
+KMRP Original HD Menu and KMRP Original HD Descriptions, as TrueType, set the window's
+text. They are KMRP's own fonts, Copyright (c) 2026, RaymanGT, under the SIL Open Font
+License 1.1 (OFL.txt, beside this file). No Reserved Font Name.
+https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/tree/master/fonts
+
+The pictures of example text on the tiles are drawn in the same KMRP Original HD fonts.
+
+Pictures
+--------
+
+The KMRP and KOTOR logos: the crest is KMRP's own artwork (its sigil); the letters are
+drawn with the Georgia typeface (a picture of the letters, not the font file). The
+settings gear and the window's icon are the KMRP installer's own.
+
+Names
+-----
+
+"Star Wars", "Knights of the Old Republic", "KOTOR", "BioWare" and "LucasArts", and
+the game's character and place names in the example lines, are trademarks or names of
+their owners, used only to name the game and its text. The KMRP Font Converter is a fan
+project and is not affiliated with them.
+
+Windows
+-------
+
+Font files are read with Windows' own DirectWrite, which is part of Windows (or of Wine).
+Nothing from it is carried in the program.

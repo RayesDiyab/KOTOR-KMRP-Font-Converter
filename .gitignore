@@ -1,0 +1,6 @@
+# Build output: the converter's exe and release zip, the test's work folders, the font
+# redraw's intermediate files.
+font-converter/dist/
+build/
+__pycache__/
+*.pyc

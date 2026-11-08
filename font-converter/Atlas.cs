@@ -13,9 +13,14 @@
 //     Original font's glyph there.
 //   * 4 pixels between glyphs, so filtering never reaches the next row's ink.
 //
-// The atlases are made at the HD Original font's size, six times the original fonts'
-// (docs/hd-original-font.md), from its TXI headers: the same heights, baselines and
-// spacing, so text keeps its place and size in every interface.
+// For KMRP the atlases are made at the HD Original font's size, six times the original
+// fonts' (docs/hd-original-font.md), from its TXI headers: the same heights, baselines and
+// spacing, so text keeps its place and size in every interface, and KMRP fits them to the
+// size it draws them at. For the original game (2026-11-08) they are made at the original
+// fonts' own size, a sixth of that: the TXI's heights and spacing divided by six (every
+// one divides exactly: 10, 12, 14, 16, 19 and 32 pixels), and each letter drawn by Windows
+// with the font's own hinting, as Windows draws its own text at those sizes, so the small
+// letters are crisp. The game draws them one texel to one pixel as it draws its own.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -73,10 +78,29 @@ namespace KmrpFontConverter
         }
     }
 
+    /// <summary>Who the fonts are made for: KMRP, which sizes them, or the original game.</summary>
+    internal enum Target { Kmrp, Original }
+
     internal static class Atlas
     {
         public const int Padding = 4;
+        /// <summary>The original fonts are a sixth of KMRP's HD size.</summary>
+        public const int OriginalDivisor = 6;
+        /// <summary>The largest atlas written: KMRP's own largest (dialogfont32x32 at six
+        /// times). A font that needs more is refused rather than written as a picture of a
+        /// gigabyte or more into the game (audit F4).</summary>
+        public const int MaxSize = 4096;
         private static readonly Encoding Cp1252 = Encoding.GetEncoding(1252);
+
+        /// <summary>The letters A to Z and a to z the face has no glyph for. A font missing
+        /// them would turn the game's text invisible (audit F5), so it is not taken.</summary>
+        public static string MissingBasicLatin(LoadedFace face)
+        {
+            var b = new StringBuilder();
+            for (char c = 'A'; c <= 'Z'; c++) if (face.Glyph(c) == 0) b.Append(c);
+            for (char c = 'a'; c <= 'z'; c++) if (face.Glyph(c) == 0) b.Append(c);
+            return b.ToString();
+        }
 
         /// <summary>The character slot `index` holds, or -1 for a blank one.</summary>
         public static int SlotCharacter(int index)
@@ -132,19 +156,29 @@ namespace KmrpFontConverter
         }
 
         /// <summary>The atlas and TXI for one font, written into `folder`.</summary>
-        public static void Write(LoadedFace face, Reference reference, string folder)
+        public static void Write(LoadedFace face, Reference reference, string folder, Target target = Target.Kmrp)
         {
-            int height = reference.GlyphHeight;
+            bool original = target == Target.Original;
+            int divisor = original ? OriginalDivisor : 1;
+            int height = (int)Math.Round(reference.GlyphHeight / (double)divisor);
             float top, bottom;
             Box(face, out top, out bottom);
             float scale = height / Math.Max(1, top + bottom);
             float em = face.UnitsPerEm * scale;
             float ascent = top * scale;
+            // The original game's letters stand on a whole pixel, where Windows' hinting puts them.
+            int baseline = (int)Math.Round(ascent);
             int count = reference.NumChars;
+            float ringWidth;
+            bool outlined = Outlined.TryGetValue(reference.Resref, out ringWidth);
+            ringWidth /= divisor;
 
             var widths = new int[count];
             var offsets = new float[count];
             var outlines = new List<List<PointF2>>[count];
+            var hinted = new byte[count][];
+            var boxes = new Dw.Rect[count];
+            bool windowsDraws = original;
             for (int i = 0; i < count; i++)
             {
                 int c = SlotCharacter(i);
@@ -153,48 +187,89 @@ namespace KmrpFontConverter
                 if (glyph != 0)
                 {
                     advance = (int)Math.Round(face.Advance(glyph) * scale);
-                    var outline = face.Outline(glyph, em);
-                    float minX = float.MaxValue, maxX = float.MinValue;
-                    foreach (var contour in outline)
-                        foreach (var p in contour) { minX = Math.Min(minX, p.X); maxX = Math.Max(maxX, p.X); }
-                    if (minX <= maxX)
+                    if (windowsDraws)
                     {
-                        float left = Math.Min(0, minX);
-                        float right = maxX - left;
-                        if (right > advance) advance = (int)Math.Ceiling(right);
-                        offsets[i] = -left;
-                        outlines[i] = outline;
+                        try
+                        {
+                            Dw.Rect box;
+                            hinted[i] = face.Hinted(glyph, em, out box);
+                            boxes[i] = box;
+                        }
+                        // Where Windows (or Wine) cannot draw it, every letter is drawn here
+                        // instead, unhinted, so the set is one style.
+                        catch (Exception)
+                        {
+                            windowsDraws = false;
+                            Array.Clear(hinted, 0, count);
+                            Array.Clear(offsets, 0, count);
+                            Array.Clear(widths, 0, count);
+                            i = -1;
+                            continue;
+                        }
+                    }
+                    if (windowsDraws)
+                    {
+                        if (hinted[i] != null)
+                        {
+                            int left = Math.Min(0, boxes[i].left);
+                            advance = Math.Max(advance, boxes[i].right - left);
+                            offsets[i] = -left;
+                        }
+                    }
+                    else
+                    {
+                        var outline = face.Outline(glyph, em);
+                        float minX = float.MaxValue, maxX = float.MinValue;
+                        foreach (var contour in outline)
+                            foreach (var p in contour) { minX = Math.Min(minX, p.X); maxX = Math.Max(maxX, p.X); }
+                        if (minX <= maxX)
+                        {
+                            float left = Math.Min(0, minX);
+                            float right = maxX - left;
+                            if (right > advance) advance = (int)Math.Ceiling(right);
+                            offsets[i] = -left;
+                            outlines[i] = outline;
+                        }
                     }
                 }
-                if (advance <= 0) advance = Math.Max(1, i < reference.Widths.Length ? reference.Widths[i] : height / 3);
+                if (advance <= 0)
+                    advance = Math.Max(1, i < reference.Widths.Length ? (int)Math.Round(reference.Widths[i] / (double)divisor) : height / 3);
                 // An outlined font's letter gets its ring's width on both sides, so the
                 // ring is never cut by the cell (KMRP's own HUD font: one side, the
                 // original's letters leaving the other).
-                float ringWidth;
-                if (Outlined.TryGetValue(reference.Resref, out ringWidth))
+                if (outlined)
                 {
-                    offsets[i] += ringWidth;
-                    advance += (int)Math.Ceiling(2 * ringWidth);
+                    offsets[i] += (float)Math.Ceiling(ringWidth);
+                    advance += 2 * (int)Math.Ceiling(ringWidth);
                 }
+                if (advance > MaxSize)
+                    throw new InvalidDataException("A letter of this font is too wide for the game's fonts.");
                 widths[i] = advance;
             }
 
-            int size = Math.Max(64, reference.AtlasWidth);
+            // Powers of two: the original game's own atlases are, and older drivers want them.
+            int size = original ? 64 : Math.Max(64, reference.AtlasWidth);
             List<Point> positions;
-            while ((positions = Pack(widths, height, size)) == null) size *= 2;
+            while ((positions = Pack(widths, height, size)) == null)
+            {
+                size *= 2;
+                if (size > MaxSize) throw new InvalidDataException("This font's letters are too wide to fit the game's fonts.");
+            }
 
             var alpha = new byte[size * size];
-            byte[] ring = Outlined.ContainsKey(reference.Resref) ? new byte[size * size] : null;
+            byte[] ring = outlined ? new byte[size * size] : null;
             for (int i = 0; i < count; i++)
             {
-                if (outlines[i] == null) continue;
-                var cell = Rasterizer.Fill(outlines[i], widths[i], height, offsets[i], ascent);
+                byte[] cell;
+                if (hinted[i] != null) cell = Place(hinted[i], boxes[i], widths[i], height, (int)offsets[i], baseline);
+                else if (outlines[i] != null) cell = Rasterizer.Fill(outlines[i], widths[i], height, offsets[i], original ? baseline : ascent);
+                else continue;
                 Point at = positions[i];
                 for (int y = 0; y < height; y++)
                     Buffer.BlockCopy(cell, y * widths[i], alpha, (at.Y + y) * size + at.X, widths[i]);
                 if (ring != null)
                 {
-                    byte[] spread = Spread(cell, widths[i], height, Outlined[reference.Resref]);
+                    byte[] spread = Spread(cell, widths[i], height, ringWidth);
                     for (int y = 0; y < height; y++)
                         Buffer.BlockCopy(spread, y * widths[i], ring, (at.Y + y) * size + at.X, widths[i]);
                 }
@@ -203,7 +278,28 @@ namespace KmrpFontConverter
             Directory.CreateDirectory(folder);
             WriteTga(Path.Combine(folder, reference.Resref + ".tga"), size, alpha, ring);
             File.WriteAllText(Path.Combine(folder, reference.Resref + ".txi"),
-                Txi(reference, positions, widths, height, size), Encoding.ASCII);
+                Txi(reference, positions, widths, height, size, divisor), Encoding.ASCII);
+        }
+
+        /// <summary>A letter Windows drew (box relative to its pen on the baseline) put into
+        /// its cell: the pen `pen` pixels in, the baseline `baseline` pixels down; any ink
+        /// past the cell's edge is cut.</summary>
+        private static byte[] Place(byte[] ink, Dw.Rect box, int width, int height, int pen, int baseline)
+        {
+            var cell = new byte[width * height];
+            int w = box.right - box.left;
+            for (int y = box.top; y < box.bottom; y++)
+            {
+                int row = baseline + y;
+                if (row < 0 || row >= height) continue;
+                for (int x = box.left; x < box.right; x++)
+                {
+                    int col = pen + x;
+                    if (col < 0 || col >= width) continue;
+                    cell[row * width + col] = ink[(y - box.top) * w + (x - box.left)];
+                }
+            }
+            return cell;
         }
 
         // Fonts the game draws with a black ring round every letter, and its width at the
@@ -246,13 +342,18 @@ namespace KmrpFontConverter
             return positions;
         }
 
-        private static string Txi(Reference reference, List<Point> positions, int[] widths, int height, int size)
+        // The TXI fields that are lengths in pixels (times 100), divided for the original game.
+        private static readonly string[] Lengths = { "fontheight", "baselineheight", "spacingR", "spacingB" };
+
+        private static string Txi(Reference reference, List<Point> positions, int[] widths, int height, int size, int divisor)
         {
             var b = new StringBuilder();
             foreach (string line in reference.Header)
             {
                 string key = line.Split(' ')[0];
                 if (key == "texturewidth") b.Append("texturewidth ").Append(F(size / 100.0)).Append('\n');
+                else if (divisor != 1 && Array.IndexOf(Lengths, key) >= 0)
+                    b.Append(key).Append(' ').Append(F(reference.Field(key) / divisor)).Append('\n');
                 else b.Append(line).Append('\n');
             }
             b.Append("upperleftcoords ").Append(positions.Count).Append('\n');

@@ -79,10 +79,70 @@ namespace KmrpFontConverter
             var fn = Dw.Fn<Dw.TryGetFontTableFn>(Face, 12);
             Dw.Check(fn(Face, key, out data, out size, out context, out exists));
             if (exists == 0) return null;
-            var bytes = new byte[size];
-            Marshal.Copy(data, bytes, 0, (int)size);
-            Dw.Fn<Dw.ReleaseFontTableFn>(Face, 13)(Face, context);
-            return bytes;
+            try
+            {
+                if (size > MaxTable) throw new InvalidDataException("This font has a table too large to read.");
+                var bytes = new byte[size];
+                Marshal.Copy(data, bytes, 0, (int)size);
+                return bytes;
+            }
+            finally { Dw.Fn<Dw.ReleaseFontTableFn>(Face, 13)(Face, context); }
+        }
+
+        private const uint MaxTable = 64u << 20;
+
+        /// <summary>The glyph as Windows draws it at a small size, with the font's own hinting
+        /// (DirectWrite's GDI-classic rendering, as Windows' own text at 10 to 19 pixels): its
+        /// coverage, 0 to 255, in the box `bounds` (pixels from the origin given, y down).
+        /// Greyscale where DirectWrite offers it (IDWriteFactory2, Windows 8.1 and later, and
+        /// Wine); else ClearType's three samples a pixel averaged, whose filter pads each glyph
+        /// a pixel each side (seen 2026-11-08: a gap after Georgia's m at 10 pixels). Null when
+        /// the glyph has no ink; throws when DirectWrite cannot draw it.</summary>
+        public byte[] Hinted(ushort glyph, float emSize, out Dw.Rect bounds)
+        {
+            var run = new Dw.GlyphRun { fontFace = Face, fontEmSize = emSize, glyphCount = 1 };
+            var indices = new[] { glyph };
+            var advances = new[] { 0f };
+            GCHandle hi = GCHandle.Alloc(indices, GCHandleType.Pinned), ha = GCHandle.Alloc(advances, GCHandleType.Pinned);
+            IntPtr analysis = IntPtr.Zero;
+            try
+            {
+                run.glyphIndices = hi.AddrOfPinnedObject();
+                run.glyphAdvances = ha.AddrOfPinnedObject();
+                bool grey = false;
+                // IDWriteFactory2::CreateGlyphRunAnalysis (slot 30): DWRITE_RENDERING_MODE_GDI_CLASSIC
+                // (2), DWRITE_MEASURING_MODE_GDI_CLASSIC (1), DWRITE_GRID_FIT_MODE_ENABLED (2),
+                // DWRITE_TEXT_ANTIALIAS_MODE_GRAYSCALE (1): an ALIASED_1x1 texture of grey values.
+                if (Dw.Factory2 != IntPtr.Zero &&
+                    Dw.Fn<Dw.CreateGlyphRunAnalysis2Fn>(Dw.Factory2, 30)(Dw.Factory2, ref run, IntPtr.Zero, 2, 1, 2, 1, 0f, 0f, out analysis) >= 0)
+                    grey = true;
+                else
+                    // IDWriteFactory::CreateGlyphRunAnalysis (23), ClearType samples.
+                    Dw.Check(Dw.Fn<Dw.CreateGlyphRunAnalysisFn>(Dw.Factory, 23)(Dw.Factory, ref run, 1f, IntPtr.Zero, 2, 1, 0f, 0f, out analysis));
+                // DWRITE_TEXTURE_ALIASED_1x1 (0) or DWRITE_TEXTURE_CLEARTYPE_3x1 (1).
+                int type = grey ? 0 : 1;
+                Dw.Check(Dw.Fn<Dw.GetAlphaTextureBoundsFn>(analysis, 3)(analysis, type, out bounds));
+                int w = bounds.right - bounds.left, h = bounds.bottom - bounds.top;
+                if (w <= 0 || h <= 0) return null;
+                if ((long)w * h > 1 << 22) throw new InvalidDataException("A letter of this font is too large to draw.");
+                if (grey)
+                {
+                    var alpha = new byte[w * h];
+                    Dw.Check(Dw.Fn<Dw.CreateAlphaTextureFn>(analysis, 4)(analysis, 0, ref bounds, alpha, (uint)alpha.Length));
+                    return alpha;
+                }
+                var rgb = new byte[w * h * 3];
+                Dw.Check(Dw.Fn<Dw.CreateAlphaTextureFn>(analysis, 4)(analysis, 1, ref bounds, rgb, (uint)rgb.Length));
+                var averaged = new byte[w * h];
+                for (int i = 0; i < averaged.Length; i++) averaged[i] = (byte)((rgb[i * 3] + rgb[i * 3 + 1] + rgb[i * 3 + 2] + 1) / 3);
+                return averaged;
+            }
+            finally
+            {
+                if (analysis != IntPtr.Zero) Marshal.Release(analysis);
+                hi.Free();
+                ha.Free();
+            }
         }
     }
 
@@ -163,13 +223,36 @@ namespace KmrpFontConverter
             }
             finally { Marshal.Release(file); }
             var loaded = new LoadedFace { Face = face };
-            Dw.FontMetrics metrics;
-            Dw.Fn<Dw.GetMetricsFn>(face, 8)(face, out metrics);
-            loaded.UnitsPerEm = metrics.designUnitsPerEm;
-            loaded.Ascent = metrics.ascent;
-            loaded.Descent = metrics.descent;
-            loaded.Name = choice.Name ?? FullName(loaded) ?? System.IO.Path.GetFileNameWithoutExtension(choice.Path);
-            return loaded;
+            try
+            {
+                Dw.FontMetrics metrics;
+                Dw.Fn<Dw.GetMetricsFn>(face, 8)(face, out metrics);
+                loaded.UnitsPerEm = metrics.designUnitsPerEm;
+                loaded.Ascent = metrics.ascent;
+                loaded.Descent = metrics.descent;
+                loaded.Name = choice.Name ?? FullName(loaded) ?? System.IO.Path.GetFileNameWithoutExtension(choice.Path);
+                return loaded;
+            }
+            catch
+            {
+                loaded.Dispose();
+                throw;
+            }
+        }
+
+        // The folder WOFF and WOFF2 files are unpacked into. Emptied when the program starts
+        // and when it ends (audit F10: until 2026-11-08 every one opened stayed there).
+        private static string TempFolder { get { return System.IO.Path.Combine(System.IO.Path.GetTempPath(), "KMRP Font Converter"); } }
+
+        public static void CleanTemp()
+        {
+            try
+            {
+                if (!Directory.Exists(TempFolder)) return;
+                foreach (string file in Directory.GetFiles(TempFolder, "*.otf"))
+                    try { File.Delete(file); } catch (Exception) { }   // another copy of the program may be using it
+            }
+            catch (Exception) { }
         }
 
         // A WOFF or WOFF2 file, unpacked once to a plain font in the temp folder: DirectWrite
@@ -182,11 +265,12 @@ namespace KmrpFontConverter
             if (ext != ".woff" && ext != ".woff2") return path;
             string done;
             if (unpacked.TryGetValue(path, out done) && File.Exists(done)) return done;
+            if (new FileInfo(path).Length > MaxFont) throw new InvalidDataException("This font file is too large.");
             byte[] data = File.ReadAllBytes(path);
             // WOFF is read here, so it needs nothing newer than DirectWrite's first version
             // (Windows 7, and Wine under Proton); WOFF2 needs DirectWrite to unpack it.
             byte[] font = ext == ".woff" ? Woff(data) : DirectWriteUnpack(data);
-            string folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "KMRP Font Converter");
+            string folder = TempFolder;
             Directory.CreateDirectory(folder);
             done = System.IO.Path.Combine(folder, Guid.NewGuid().ToString("N") + ".otf");
             File.WriteAllBytes(done, font);
@@ -210,42 +294,60 @@ namespace KmrpFontConverter
             {
                 ulong size;
                 Dw.Check(Dw.Fn<Dw.GetFileSizeFn>(stream, 5)(stream, out size));
+                if (size > MaxFont) throw new InvalidDataException("This web font unpacks to more than a font can be.");
                 IntPtr fragment, context;
                 Dw.Check(Dw.Fn<Dw.ReadFileFragmentFn>(stream, 3)(stream, out fragment, 0, size, out context));
-                var font = new byte[size];
-                Marshal.Copy(fragment, font, 0, (int)size);
-                Dw.Fn<Dw.ReleaseFileFragmentFn>(stream, 4)(stream, context);
-                return font;
+                try
+                {
+                    var font = new byte[size];
+                    Marshal.Copy(fragment, font, 0, (int)size);
+                    return font;
+                }
+                finally { Dw.Fn<Dw.ReleaseFileFragmentFn>(stream, 4)(stream, context); }
             }
             finally { Marshal.Release(stream); }
         }
 
         /// <summary>A WOFF 1.0 file back to the font it packs: each table inflated (zlib)
         /// and laid out again behind a plain table directory.</summary>
+        // No real font comes near these; they keep a damaged or hostile file from making the
+        // program reserve gigabytes (audit F6).
+        private const long MaxFont = 128L << 20;
+
         private static byte[] Woff(byte[] w)
         {
+            const string damaged = "This WOFF font is damaged.";
             if (w.Length < 44 || U32(w, 0) != 0x774F4646) throw new InvalidDataException("This is not a WOFF font.");
             uint flavor = U32(w, 4);
             int tables = U16(w, 12);
+            long total = U32(w, 16);   // totalSfntSize: the font's size unpacked, as the file says
+            if (tables == 0 || 44L + tables * 20L > w.Length || total > MaxFont) throw new InvalidDataException(damaged);
             var tags = new uint[tables];
             var bodies = new byte[tables][];
             var sums = new uint[tables];
+            long unpacked = 12 + 16L * tables;
             for (int i = 0; i < tables; i++)
             {
                 int r = 44 + i * 20;
                 tags[i] = U32(w, r);
-                int offset = (int)U32(w, r + 4), compressed = (int)U32(w, r + 8), length = (int)U32(w, r + 12);
+                long offset = U32(w, r + 4), compressed = U32(w, r + 8), length = U32(w, r + 12);
                 sums[i] = U32(w, r + 16);
-                if (offset + compressed > w.Length) throw new InvalidDataException("This WOFF font is damaged.");
+                unpacked += (length + 3) & ~3L;
+                if (offset + compressed > w.Length || compressed > length || unpacked > total + 3 || unpacked > MaxFont)
+                    throw new InvalidDataException(damaged);
                 var body = new byte[length];
-                if (compressed == length) Buffer.BlockCopy(w, offset, body, 0, length);
+                if (compressed == length) Buffer.BlockCopy(w, (int)offset, body, 0, (int)length);
                 else
+                {
+                    if (compressed < 2) throw new InvalidDataException(damaged);
                     using (var inflate = new System.IO.Compression.DeflateStream(
-                        new MemoryStream(w, offset + 2, compressed - 2), System.IO.Compression.CompressionMode.Decompress))
+                        new MemoryStream(w, (int)offset + 2, (int)compressed - 2), System.IO.Compression.CompressionMode.Decompress))
                     {
                         int read = 0, got;
-                        while (read < length && (got = inflate.Read(body, read, length - read)) > 0) read += got;
+                        while (read < length && (got = inflate.Read(body, read, (int)length - read)) > 0) read += got;
+                        if (read != length) throw new InvalidDataException(damaged);
                     }
+                }
                 bodies[i] = body;
             }
             var output = new MemoryStream();
@@ -318,7 +420,9 @@ namespace KmrpFontConverter
             if (t == null || t.Length < 16) return list;
             int axesOffset = U16(t, 4), axisCount = U16(t, 8), axisSize = U16(t, 10);
             int instanceCount = U16(t, 12), instanceSize = U16(t, 14);
-            if (axisCount == 0 || axisSize < 20) return list;
+            // A damaged table names no instances: the font's default one is still offered.
+            if (axisCount == 0 || axisSize < 20 || instanceSize < 4 + 4 * axisCount) return list;
+            if (axesOffset + (long)axisCount * axisSize > t.Length) return list;
             var tags = new uint[axisCount];
             for (int a = 0; a < axisCount; a++)
             {
@@ -328,11 +432,11 @@ namespace KmrpFontConverter
             }
             string family = NameRecord(face, 16) ?? NameRecord(face, 1) ?? "Font";
             var seen = new HashSet<string>();
-            int first = axesOffset + axisCount * axisSize;
+            long first = axesOffset + (long)axisCount * axisSize;
             for (int n = 0; n < instanceCount; n++)
             {
-                int o = first + n * instanceSize;
-                if (o + 4 + 4 * axisCount > t.Length) break;
+                if (first + (long)n * instanceSize + 4 + 4 * axisCount > t.Length) break;
+                int o = (int)(first + (long)n * instanceSize);
                 string sub = NameRecord(face, U16(t, o)) ?? ("Style " + (n + 1));
                 var axes = new float[axisCount * 2];
                 for (int a = 0; a < axisCount; a++)
@@ -436,7 +540,7 @@ namespace KmrpFontConverter
 
     internal static class Dw
     {
-        public static readonly IntPtr Factory, Factory5, Factory6;
+        public static readonly IntPtr Factory, Factory2, Factory5, Factory6;
 
         static Dw()
         {
@@ -444,6 +548,7 @@ namespace KmrpFontConverter
             IntPtr factory;
             Check(DWriteCreateFactory(1, ref iid, out factory));            // isolated
             Factory = factory;
+            Factory2 = Query(factory, new Guid("0439fc60-ca44-4994-8dee-3a9af7b732ec"));
             Factory5 = Query(factory, new Guid("958db99a-be2a-4f09-af7d-65189803d1d3"));
             Factory6 = Query(factory, new Guid("f3744d80-21f7-42eb-b35d-995bc72fc223"));
         }
@@ -529,5 +634,33 @@ namespace KmrpFontConverter
         public delegate int CreateFontResourceFn(IntPtr self, IntPtr file, uint faceIndex, out IntPtr resource);
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate int ResourceCreateFontFaceFn(IntPtr self, int simulations, float[] axisValues, uint count, out IntPtr face);
+
+        // A glyph drawn by Windows (LoadedFace.Hinted): IDWriteFactory::CreateGlyphRunAnalysis
+        // (slot 23, the last of IDWriteFactory), IDWriteGlyphRunAnalysis::GetAlphaTextureBounds
+        // (3) and CreateAlphaTexture (4).
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Rect { public int left, top, right, bottom; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct GlyphRun
+        {
+            public IntPtr fontFace;
+            public float fontEmSize;
+            public uint glyphCount;
+            public IntPtr glyphIndices, glyphAdvances, glyphOffsets;
+            public int isSideways;
+            public uint bidiLevel;
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int CreateGlyphRunAnalysisFn(IntPtr self, ref GlyphRun run, float pixelsPerDip, IntPtr transform,
+                                                     int renderingMode, int measuringMode, float originX, float originY, out IntPtr analysis);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int CreateGlyphRunAnalysis2Fn(IntPtr self, ref GlyphRun run, IntPtr transform, int renderingMode,
+                                                      int measuringMode, int gridFitMode, int antialiasMode, float originX, float originY, out IntPtr analysis);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int GetAlphaTextureBoundsFn(IntPtr self, int textureType, out Rect bounds);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int CreateAlphaTextureFn(IntPtr self, int textureType, ref Rect bounds, byte[] texture, uint size);
     }
 }
