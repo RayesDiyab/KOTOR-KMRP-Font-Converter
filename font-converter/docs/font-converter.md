@@ -42,6 +42,7 @@ Split by job on 2026-11-08 (audit: the window was one 1,848-line file).
 | `FontSource.cs` | Reading font files through DirectWrite, by vtable; WOFF read here; Windows' own hinted drawing of small letters |
 | `build.ps1` | Builds `dist\KMRP Font Converter.exe` from this folder alone; `-Refresh` remakes `data/`; `-Release` the release zip (section 6) |
 | `kmrp-logo.png`, `kotor-logo.png` | The logo, `tools/build_brand_image.py --text KMRP --tracking 0.12 --whole-crest`, 714x535 made 400x300; the same with `--text KOTOR`, at the same scale, 486x302 (2026-11-08). The KMRP one remade this way is pixel for pixel the committed file |
+| `font-logo.png` | The repository README's logo, not built into the program: the same tool with `--text FONT`, at full size, 677x539 (2026-11-09) |
 | `make_data.py`, `data/` | Makes `data/`: `references.txt`, `examples.txt` and the example PNGs, from KMRP's `assets/hd-original-fonts`; committed, so the converter builds without the rest of KMRP |
 | `favicon.ico` | The window icon, a copy of `src/patcher/favicon.ico` |
 | `settings.png` | The Settings button's gear: the installer's `src/patcher/icons/Settings.png` cropped to its ink and made 512 px, drawn in one colour from its alpha |

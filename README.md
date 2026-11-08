@@ -1,4 +1,10 @@
+<div align="center">
+
+<img src="font-converter/font-logo.png" alt="The KMRP sigil above the word FONT" width="300">
+
 # KOTOR-KMRP Font Converter
+
+</div>
 
 Two things for Star Wars: Knights of the Old Republic, made for KMRP (the KOTOR Modern
 Restoration Patch) and usable without it:
