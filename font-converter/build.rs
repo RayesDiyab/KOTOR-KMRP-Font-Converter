@@ -37,7 +37,8 @@ fn windows_resources() {
     res.set("FileDescription", "KMRP Font Converter");
     res.set("CompanyName", "RaymanGT");
     res.set("LegalCopyright", "Copyright (c) 2026 RaymanGT. GPL-3.0-or-later.");
-    res.set("OriginalFilename", "KMRP Font Converter.exe");
+    let version = std::env::var("CARGO_PKG_VERSION").unwrap_or_default();
+    res.set("OriginalFilename", &format!("KOTOR-Font-Converter-{version}-Windows-x64.exe"));
     if let Err(e) = res.compile() {
         // Without the Windows SDK's resource compiler the exe has no icon; it still runs.
         println!("cargo:warning=no icon in the exe: {e}");

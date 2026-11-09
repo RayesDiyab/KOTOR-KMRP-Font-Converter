@@ -14,11 +14,11 @@ What you need
 -------------
 
 - One of:
-    Windows 10 or 11, 64-bit       KMRP-Font-Converter-<version>-Windows-x64.zip
-    macOS 11 or newer, Apple       KMRP-Font-Converter-<version>-macOS.dmg (or .zip): one
+    Windows 10 or 11, 64-bit       KOTOR-Font-Converter-<version>-Windows-x64.zip
+    macOS 11 or newer, Apple       KOTOR-Font-Converter-<version>-macOS.dmg (or .zip): one
       silicon or Intel             app for both
-    Linux, 64-bit Intel or AMD     KMRP-Font-Converter-<version>-Linux-x86_64.AppImage
-    Linux, 64-bit ARM              KMRP-Font-Converter-<version>-Linux-aarch64.AppImage
+    Linux, 64-bit Intel or AMD     KOTOR-Font-Converter-<version>-Linux-x86_64.AppImage
+    Linux, 64-bit ARM              KOTOR-Font-Converter-<version>-Linux-aarch64.AppImage
   A graphics driver with OpenGL 2 or newer, as every desktop has.
 - KOTOR 1. For the KMRP version, KMRP 1.6.0 or later. On macOS and Linux the game is the
   Windows game run through Steam's Proton, CrossOver or Wine: the fonts are for its Override
@@ -29,8 +29,9 @@ How to use it
 -------------
 
 1. Start it. Nothing is installed.
-     Windows  "KMRP Font Converter.exe"
-     macOS    open the DMG and drag "KMRP Font Converter" to Applications, then open it.
+     Windows  "KOTOR-Font-Converter-<version>-Windows-x64.exe"
+     macOS    open the DMG and drag "KOTOR-Font-Converter-<version>-macOS" to
+              Applications, then open it.
               It is not notarized by Apple: the first time, right-click it and choose Open.
      Linux    make the AppImage executable (chmod +x, or the file's Properties) and run it.
 2. On a tile, click "Choose a font..." and pick a font file (TTF, OTF, TTC, OTC,

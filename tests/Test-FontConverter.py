@@ -43,7 +43,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONVERTER = ROOT / "font-converter"
 WINDOWS = sys.platform == "win32"
-EXE = CONVERTER / "dist" / "KMRP Font Converter.exe" if WINDOWS else CONVERTER / "build" / "target" / "release" / "kmrp-font-converter"
+# The exe build.ps1 writes, named for its version (KOTOR-Font-Converter-<version>-Windows-x64.exe
+# since 2026-11-09; "KMRP Font Converter.exe" until then).
+VERSION = next(l.split('"')[1] for l in (CONVERTER / "Cargo.toml").read_text(encoding="utf-8").splitlines() if l.startswith("version = "))
+EXE = CONVERTER / "dist" / f"KOTOR-Font-Converter-{VERSION}-Windows-x64.exe" if WINDOWS else CONVERTER / "build" / "target" / "release" / "kmrp-font-converter"
 WORK = ROOT / "build" / "font-converter-check"
 FONTS = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
 # A TrueType font with every letter the game uses, for the inputs made here: Arial where it is,

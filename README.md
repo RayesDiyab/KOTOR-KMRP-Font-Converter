@@ -69,12 +69,12 @@ does not change what the text says, or the size of the game's text in the origin
 | --- | --- |
 | Game | *Star Wars: Knights of the Old Republic* (2003 PC release). Seen working with GOG's 1.03 `swkotor.exe` (`9C10E045...`) for the original game, and with KMRP on Steam's game |
 | For the KMRP version | KMRP 1.6.0 or later. An older KMRP draws these fonts six times too large |
-| Windows | 10 or 11, 64-bit: `KMRP-Font-Converter-<version>-Windows-x64.zip`. Seen working on Windows 11 (2026-11-09) |
-| macOS | 11 or later, Apple silicon or Intel (one Universal 2 app): `KMRP-Font-Converter-<version>-macOS.dmg`. **Not yet run on a Mac**: compiled for both architectures on Windows (type-checked, not linked); the app is made by `build-macos.sh` on a Mac or by the CI workflow, not yet run |
-| Linux | x86_64 or aarch64: `KMRP-Font-Converter-<version>-Linux-<arch>.AppImage`. The x86_64 one converted fonts under WSL's Ubuntu 20.04 (2026-11-09); its window and the aarch64 one: **not yet tried** |
+| Windows | 10 or 11, 64-bit: `KOTOR-Font-Converter-<version>-Windows-x64.zip`. Seen working on Windows 11 (2026-11-09) |
+| macOS | 11 or later, Apple silicon or Intel (one Universal 2 app): `KOTOR-Font-Converter-<version>-macOS.dmg`. **Not yet run on a Mac**: compiled for both architectures on Windows (type-checked, not linked); the app is made by `build-macos.sh` on a Mac or by the CI workflow, not yet run |
+| Linux | x86_64 or aarch64: `KOTOR-Font-Converter-<version>-Linux-<arch>.AppImage`. The x86_64 one converted fonts under WSL's Ubuntu 20.04 (2026-11-09); its window and the aarch64 one: **not yet tried** |
 | The game on macOS and Linux | The Windows game through Steam's Proton, CrossOver or Wine: the fonts go in its Override folder |
 
-1. Start the program: `KMRP Font Converter.exe`, the app, or the AppImage. Nothing is installed.
+1. Start the program: `KOTOR-Font-Converter-<version>-Windows-x64.exe`, the app, or the AppImage. Nothing is installed.
 2. On a tile, **Choose a font...** or drag a font file onto it.
 3. In the **Version** box, choose **KMRP** or **Original Game**. It starts on KMRP when
    it finds KMRP in your game, and remembers your choice.
@@ -87,7 +87,7 @@ ending from any `*.tpc.before-font-converter`. The names are listed in the readm
 comes with the program, [release/README.txt](font-converter/release/README.txt).
 
 **The 1.0.0 Windows program** is 6,514,688 bytes, SHA-256
-`ACC63B25F48C770AB30DA8F490F8019A15CCE5B54505A6C59F87B93713DDA9E5`, built
+`AF794C61AEA57E2A0A8022289E4A68D0E5CCB509DBCDD69262150C08FCFDC92B`, built
 deterministically: the same sources give the same bytes (a rebuild from clean gave the
 same SHA-256, 2026-11-09). It is **not signed**, so Windows SmartScreen and some antivirus
 programs may warn; it has not yet been scanned on VirusTotal. The macOS app is signed ad
@@ -167,9 +167,9 @@ Building is only needed to change the program; players run the released packages
 
 | System | Command | Makes, in `font-converter/dist/` |
 | --- | --- | --- |
-| Windows | `powershell -ExecutionPolicy Bypass -File font-converter\build.ps1 -Release` | `KMRP Font Converter.exe`, `KMRP-Font-Converter-<version>-Windows-x64.zip` |
-| macOS | `sh font-converter/build-macos.sh` | `KMRP Font Converter.app` (Universal 2), `KMRP-Font-Converter-<version>-macOS.dmg` and `.zip` |
-| Linux | `sh font-converter/build-linux.sh --arch x86_64` (or `aarch64`) | `KMRP-Font-Converter-<version>-Linux-<arch>.AppImage` |
+| Windows | `powershell -ExecutionPolicy Bypass -File font-converter\build.ps1 -Release` | `KOTOR-Font-Converter-<version>-Windows-x64.exe` and `.zip` |
+| macOS | `sh font-converter/build-macos.sh` | `KOTOR-Font-Converter-<version>-macOS.app` (Universal 2), `.dmg` and `.zip` |
+| Linux | `sh font-converter/build-linux.sh --arch x86_64` (or `aarch64`) | `KOTOR-Font-Converter-<version>-Linux-<arch>.AppImage` |
 | Any | `python tests/Test-FontConverter.py` | The regression test |
 
 Each package holds the readme, the licences and the notices. The test builds the program

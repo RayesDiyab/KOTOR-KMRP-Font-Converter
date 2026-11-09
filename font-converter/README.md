@@ -22,9 +22,9 @@ the only place it is written.
 
 | System | Command | Makes, in `dist/` |
 | --- | --- | --- |
-| Windows | `powershell -ExecutionPolicy Bypass -File build.ps1 [-Release]` | `KMRP Font Converter.exe`; with `-Release` `KMRP-Font-Converter-<version>-Windows-x64.zip` |
-| macOS | `sh build-macos.sh` | `KMRP Font Converter.app` (Universal 2), `KMRP-Font-Converter-<version>-macOS.dmg` and `.zip` |
-| Linux | `sh build-linux.sh [--arch x86_64\|aarch64] [--zig]` | `KMRP-Font-Converter-<version>-Linux-<arch>.AppImage` |
+| Windows | `powershell -ExecutionPolicy Bypass -File build.ps1 [-Release]` | `KOTOR-Font-Converter-<version>-Windows-x64.exe`; with `-Release` the `.zip` of the same name |
+| macOS | `sh build-macos.sh` | `KOTOR-Font-Converter-<version>-macOS.app` (Universal 2), `.dmg` and `.zip` |
+| Linux | `sh build-linux.sh [--arch x86_64\|aarch64] [--zig]` | `KOTOR-Font-Converter-<version>-Linux-<arch>.AppImage` |
 
 Each script runs the unit tests first (`--no-tests` / `-NoTests` skips them), builds with
 `--locked`, and checks what it made. The Windows exe is deterministic: the same sources give

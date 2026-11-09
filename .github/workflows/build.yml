@@ -6,12 +6,12 @@
 #
 # packages: run by hand (Actions, "Run workflow") or by a tag v*, the release packages, as the
 # build scripts make them on a maintainer's machine:
-#   Windows   font-converter/build.ps1 -Release     KMRP-Font-Converter-<v>-Windows-x64.zip
-#   macOS     font-converter/build-macos.sh          KMRP-Font-Converter-<v>-macOS.dmg and .zip
+#   Windows   font-converter/build.ps1 -Release     KOTOR-Font-Converter-<v>-Windows-x64.zip
+#   macOS     font-converter/build-macos.sh          KOTOR-Font-Converter-<v>-macOS.dmg and .zip
 #                                                    (Universal 2: Apple silicon and Intel; ad hoc
 #                                                    signed, not notarized)
-#   Linux     font-converter/build-linux.sh          KMRP-Font-Converter-<v>-Linux-x86_64.AppImage
-#                                                    KMRP-Font-Converter-<v>-Linux-aarch64.AppImage
+#   Linux     font-converter/build-linux.sh          KOTOR-Font-Converter-<v>-Linux-x86_64.AppImage
+#                                                    KOTOR-Font-Converter-<v>-Linux-aarch64.AppImage
 # Each is kept as the run's artifact. Nothing is published or released by this workflow.
 name: Font Converter
 
@@ -76,8 +76,8 @@ jobs:
       - run: powershell -NoProfile -ExecutionPolicy Bypass -File font-converter/build.ps1 -Release
       - uses: actions/upload-artifact@v4
         with:
-          name: KMRP-Font-Converter-Windows-x64
-          path: font-converter/dist/KMRP-Font-Converter-*-Windows-x64.zip
+          name: KOTOR-Font-Converter-Windows-x64
+          path: font-converter/dist/KOTOR-Font-Converter-*-Windows-x64.zip
 
   macos:
     name: package macOS (Universal 2)
@@ -89,10 +89,10 @@ jobs:
       - run: sh font-converter/build-macos.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: KMRP-Font-Converter-macOS
+          name: KOTOR-Font-Converter-macOS
           path: |
-            font-converter/dist/KMRP-Font-Converter-*-macOS.dmg
-            font-converter/dist/KMRP-Font-Converter-*-macOS.zip
+            font-converter/dist/KOTOR-Font-Converter-*-macOS.dmg
+            font-converter/dist/KOTOR-Font-Converter-*-macOS.zip
 
   linux:
     name: package Linux ${{ matrix.arch }}
@@ -111,5 +111,5 @@ jobs:
       - run: sh font-converter/build-linux.sh --arch ${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
-          name: KMRP-Font-Converter-Linux-${{ matrix.arch }}
-          path: font-converter/dist/KMRP-Font-Converter-*-Linux-${{ matrix.arch }}.AppImage
+          name: KOTOR-Font-Converter-Linux-${{ matrix.arch }}
+          path: font-converter/dist/KOTOR-Font-Converter-*-Linux-${{ matrix.arch }}.AppImage

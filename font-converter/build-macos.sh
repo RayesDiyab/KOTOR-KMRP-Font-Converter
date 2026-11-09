@@ -1,8 +1,11 @@
 #!/bin/sh
 # Builds the KMRP Font Converter for macOS into dist/ beside this file:
-#   dist/KMRP Font Converter.app                      the program (Universal 2: Apple silicon and Intel)
-#   dist/KMRP-Font-Converter-<version>-macOS.dmg      the app with a link to Applications, to drag across
-#   dist/KMRP-Font-Converter-<version>-macOS.zip      the app with README.txt, the licences and the notices
+#   dist/KOTOR-Font-Converter-<version>-macOS.app     the program (Universal 2: Apple silicon and Intel)
+#   dist/KOTOR-Font-Converter-<version>-macOS.dmg     the app with a link to Applications, to drag across
+#   dist/KOTOR-Font-Converter-<version>-macOS.zip     the app with README.txt, the licences and the notices
+#
+# The files are named KOTOR-Font-Converter-<version>-<system> since 2026-11-09 (the
+# maintainer); the name the menu bar shows is still "KMRP Font Converter".
 #
 #   sh build-macos.sh                 tests, then both architectures
 #   sh build-macos.sh --arm64-only    Apple silicon only (no Intel half)
@@ -50,10 +53,10 @@ done
 version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
 [ -n "$version" ] || fail "no version in Cargo.toml"
 name="KMRP Font Converter"
-exe="KMRP Font Converter"
+exe="KOTOR-Font-Converter"
 bundle_id="com.raymangt.kmrp-font-converter"
 bin="kmrp-font-converter"
-package="KMRP-Font-Converter-$version-macOS"
+package="KOTOR-Font-Converter-$version-macOS"
 
 # The program carries no path of this Mac: the sources' folders become fixed names in its
 # panic messages. CARGO_ENCODED_RUSTFLAGS, its flags apart by the 0x1f byte: RUSTFLAGS splits
@@ -77,7 +80,7 @@ for t in $targets; do
 done
 
 dist="$here/dist"
-app="$dist/$name.app"
+app="$dist/$package.app"
 mkdir -p "$dist"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
@@ -177,7 +180,7 @@ rm -f "$dmg" "$zip"
 stage="$here/build/dmg"
 rm -rf "$stage"
 mkdir -p "$stage"
-ditto "$app" "$stage/$name.app"
+ditto "$app" "$stage/$package.app"
 ln -s /Applications "$stage/Applications"
 cp "$here/release/README.txt" "$here/release/THIRD-PARTY-NOTICES.txt" "$here/fonts/OFL.txt" "$stage/"
 cp "$here/../LICENSE" "$stage/LICENSE.txt"
@@ -188,8 +191,8 @@ if [ -n "$identity" ]; then
         xcrun notarytool submit "$dmg" --keychain-profile "$KMRP_NOTARY_PROFILE" --wait
         xcrun stapler staple "$dmg"
         xcrun stapler staple "$app"
-        rm -rf "$stage/$name.app"
-        ditto "$app" "$stage/$name.app"
+        rm -rf "$stage/$package.app"
+        ditto "$app" "$stage/$package.app"
     fi
 fi
 # The zip: the same files as the DMG without the Applications link, at its root.

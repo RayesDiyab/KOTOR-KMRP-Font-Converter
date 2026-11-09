@@ -1,7 +1,8 @@
 #!/bin/sh
 # Builds the KMRP Font Converter for Linux as an AppImage, into dist/ beside this file:
-#   dist/KMRP-Font-Converter-<version>-Linux-x86_64.AppImage     Intel and AMD
-#   dist/KMRP-Font-Converter-<version>-Linux-aarch64.AppImage    ARM (with --arch aarch64)
+#   dist/KOTOR-Font-Converter-<version>-Linux-x86_64.AppImage    Intel and AMD
+#   dist/KOTOR-Font-Converter-<version>-Linux-aarch64.AppImage   ARM (with --arch aarch64)
+# (named so since 2026-11-09, the maintainer; until then KMRP-Font-Converter-...)
 #
 #   sh build-linux.sh                    tests, then the release build, then the AppImage
 #   sh build-linux.sh --arch aarch64     for the other architecture (default: this machine's)
@@ -171,7 +172,7 @@ cp "$appdir/$bin.desktop" "$appdir/usr/share/applications/$bin.desktop"
 
 echo "== AppImage"
 dist="$here/dist"
-out="$dist/KMRP-Font-Converter-$version-Linux-$arch.AppImage"
+out="$dist/KOTOR-Font-Converter-$version-Linux-$arch.AppImage"
 mkdir -p "$dist"
 rm -f "$out"
 # The tool runs from its own extraction, so it needs no FUSE (WSL and CI have none). It

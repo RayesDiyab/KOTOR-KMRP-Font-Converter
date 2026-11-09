@@ -20,7 +20,7 @@ Nothing has been released from this repository yet: no tag, no GitHub release
 
 To be released on the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
 maintainer, 2026-11-08). The Windows exe is 6,514,688 bytes, SHA-256
-`ACC63B25F48C770AB30DA8F490F8019A15CCE5B54505A6C59F87B93713DDA9E5`, built deterministically
+`AF794C61AEA57E2A0A8022289E4A68D0E5CCB509DBCDD69262150C08FCFDC92B`, built deterministically
 from this repository; it and the other packages, and how they were checked, are in
 [font-converter.md](font-converter/docs/font-converter.md) sections 6 and 7.
 
@@ -67,6 +67,12 @@ from this repository; it and the other packages, and how they were checked, are 
   many, beside the cross; pointing at it lists the letters (the maintainer: the warning
   "isn't really shown fully"). Until then "N missing" cut the font's name short.
 - `--convert --exit` opens no window.
+- Every package's files named `KOTOR-Font-Converter-<version>-<system>` (the maintainer:
+  "call exes from now on KOTOR-Font-Converter-1.0.0-Windows-x64.exe and same for rest"):
+  the Windows exe and zip (`-Windows-x64`), the macOS app, DMG and zip (`-macOS`), the
+  AppImages (`-Linux-x86_64`, `-Linux-aarch64`). Until then `KMRP Font Converter.exe`
+  and `KMRP-Font-Converter-<version>-*`. The window's title and the macOS menu bar still
+  say "KMRP Font Converter".
 - The tests run on macOS and Linux too, with KMRP's own fonts as inputs where Windows' are
   missing; their close-while-converting check finds the window by its title.
 - **Not yet run:** the macOS app (type-checked for both architectures, not built), the Linux

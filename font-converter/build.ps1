@@ -1,6 +1,6 @@
 # Builds the KMRP Font Converter for Windows into dist\ beside this file:
-#   dist\KMRP Font Converter.exe                          the program, one file, nothing installed
-#   dist\KMRP-Font-Converter-<version>-Windows-x64.zip    with -Release: the exe, README.txt,
+#   dist\KOTOR-Font-Converter-<version>-Windows-x64.exe   the program, one file, nothing installed
+#   dist\KOTOR-Font-Converter-<version>-Windows-x64.zip   with -Release: the exe, README.txt,
 #                                                          LICENSE.txt, OFL.txt and the notices
 #
 #   powershell -ExecutionPolicy Bypass -File font-converter\build.ps1 [-NoTests] [-Release] [-Refresh] [-Python python]
@@ -22,12 +22,15 @@ $ErrorActionPreference = "Stop"
 
 $here = $PSScriptRoot
 $dist = Join-Path $here "dist"
-$exe = Join-Path $dist "KMRP Font Converter.exe"
 Push-Location -LiteralPath $here
 try {
     if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) { throw "cargo was not found: install Rust with rustup" }
     $version = [regex]::Match((Get-Content -LiteralPath (Join-Path $here "Cargo.toml") -Raw), '(?m)^version = "([^"]+)"').Groups[1].Value
     if (-not $version) { throw "No version in Cargo.toml" }
+    # Every package's files are named KOTOR-Font-Converter-<version>-<system> (2026-11-09, the
+    # maintainer: "call exes from now on KOTOR-Font-Converter-1.0.0-Windows-x64.exe and same
+    # for rest"); until then "KMRP Font Converter.exe" and KMRP-Font-Converter-<version>-*.
+    $exe = Join-Path $dist "KOTOR-Font-Converter-$version-Windows-x64.exe"
 
     if ($Refresh) {
         & $Python (Join-Path $here "make_data.py") (Join-Path $here "data")
@@ -70,7 +73,7 @@ try {
         Copy-Item -LiteralPath (Join-Path $here "release\THIRD-PARTY-NOTICES.txt") -Destination $stage
         Copy-Item -LiteralPath (Join-Path $here "fonts\OFL.txt") -Destination $stage
         Copy-Item -LiteralPath (Join-Path $root "LICENSE") -Destination (Join-Path $stage "LICENSE.txt")
-        $zip = Join-Path $dist "KMRP-Font-Converter-$version-Windows-x64.zip"
+        $zip = Join-Path $dist "KOTOR-Font-Converter-$version-Windows-x64.zip"
         if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         # The files at the zip's root, no folder (the maintainer, 2026-11-09: "put everything in
