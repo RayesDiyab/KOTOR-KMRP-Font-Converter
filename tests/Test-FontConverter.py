@@ -11,7 +11,9 @@ which converts without a window, and checks what it wrote, as docs
     TXI's texturewidth the atlas's width, every cell inside the atlas, none zero wide from
     slot 32 up, no comma in a number; the dialogue font's A has ink. For KMRP the atlas is
     the size of KMRP 1.6's own HD Original font's and the TXI header its header (since
-    2026-11-09); for the original game the heights a sixth of them, the atlas a power of two,
+    2026-11-09); for the original game the heights a sixth of them, the atlas a power of two
+    and the game's own font's size, the TXI header the game's line for line, CR LF (since
+    2026-11-09),
     and (when build/native-runtime/original-fonts holds the game's own) fontheight and
     baselineheight equal to the game's;
   * refused, nothing written, exit code 1: random bytes, an empty file, a font with no Latin
@@ -85,6 +87,21 @@ def references():
     return refs
 
 
+def originals():
+    """The original game's own fonts' atlas widths and TXI header lines (data/originals.txt)."""
+    games, cur = {}, None
+    for line in (CONVERTER / "data" / "originals.txt").read_text(encoding="ascii").splitlines():
+        if line.startswith("font "):
+            p = line.split()
+            cur = games[p[1]] = {"atlas": int(p[2]), "header": []}
+        elif line.startswith("  "):
+            cur["header"].append(line.strip())
+    return games
+
+
+GAMES = originals()
+
+
 def txi(path):
     lines = [l.split() for l in path.read_text(encoding="latin-1").splitlines() if l.strip()]
     head = {l[0]: l[1] for l in lines if len(l) == 2}
@@ -153,6 +170,25 @@ def check_set(folder, version, label, refs):
                     ok &= check(abs(float(head[key]) - value) < 1e-6, f"{label}: {name} {key} {head.get(key)}, KMRP's is {value}")
         if version == "original":
             ok &= check(w & (w - 1) == 0, f"{label}: {name} atlas {w} not a power of two")
+            # The game's own font's atlas size, and its TXI header line for line (only
+            # texturewidth is the atlas's), CR LF as the game's (since 2026-11-09).
+            game = GAMES[name]
+            # Larger only where the letters cannot fit the game's size even side by side
+            # with no gap: their cells' total width more than its rows hold (KMRP's own HD
+            # Console face's HUD letters, 1,128 pixels against 1,024 in 128 square).
+            height = cells[ord("A")][1] - cells[ord("A")][3]
+            inked = {c for i, c in enumerate(cells) if i > 32 and round((c[2] - c[0]) * w) > 0}
+            need = sum(round((x1 - x0) * w) for x0, _, x1, _ in inked)
+            room = (game["atlas"] // max(1, round(height * w))) * game["atlas"]
+            wanted = game["atlas"] if need <= room else game["atlas"] * 2
+            ok &= check(w == wanted, f"{label}: {name} atlas {w}, the game's is {game['atlas']} (letters {need} px, room {room})")
+            raw = txi_path.read_bytes()
+            ok &= check(raw.count(b"\r\n") == raw.count(b"\n"), f"{label}: {name} has lines not ended CR LF")
+            mine = [l.strip() for l in text.replace("\r", "").splitlines()]
+            mine = mine[:next(i for i, l in enumerate(mine) if l.lower().startswith("upperleftcoords"))]
+            theirs = [l for l in game["header"] if not l.lower().startswith("texturewidth")]
+            ok &= check([l for l in mine if not l.lower().startswith("texturewidth")] == theirs,
+                        f"{label}: {name} header differs from the game's")
             game = game_txi(name)
             if game:
                 for key in ("fontheight", "baselineheight"):

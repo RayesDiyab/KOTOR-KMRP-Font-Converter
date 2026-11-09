@@ -19,8 +19,8 @@ Nothing has been released from this repository yet: no tag, no GitHub release
 ### KMRP Font Converter 1.0.0
 
 To be released on the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
-maintainer, 2026-11-08). The Windows exe is 6,505,984 bytes, SHA-256
-`C8809F9D2B89A9D9F56E3FB8149F39276730B8CBEE9490386572F283CFB7F758`, built deterministically
+maintainer, 2026-11-08). The Windows exe is 6,514,176 bytes, SHA-256
+`6D12031699CC1DDEE5CEA50337A5A7F42791B21207D8F1C3D666107FF19940CB`, built deterministically
 from this repository; it and the other packages, and how they were checked, are in
 [font-converter.md](font-converter/docs/font-converter.md) sections 6 and 7.
 
@@ -40,6 +40,13 @@ from this repository; it and the other packages, and how they were checked, are 
   2048 square, 16 MB each, where KMRP's are 1024, 4 MB: where the letters do not fit in
   slot order, the blank slots now share one empty cell and the letters are packed widest
   first. All nine fonts the test converts fit KMRP's sizes; the test now checks it.
+- The original-game version the same way, after the game's own fonts (the maintainer:
+  "should match size, etc., and spacing of the original game"): each atlas the game's size
+  (the HUD font 128 square, as the game's, where it was 256), each TXI header the game's line
+  for line (`fnt_console`'s spacingR 0.02, as the game's, where it was 0.01), CR LF line
+  ends. The game's numbers are carried in `data/originals.txt`, made by `make_data.py`
+  from a built KMRP checkout. A HUD font too wide for 128 even with no gap between letters
+  (KMRP's own HD Console face) still gets 256.
 - The original game's letters hinted by the font's own instructions (FreeType's normal
   target) instead of Windows' GDI-classic drawing, then widened by 0.3 of the game's
   pixels (the maintainer: "slightly wider instead of slightly narrower"): the same heights

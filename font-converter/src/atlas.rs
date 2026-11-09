@@ -39,6 +39,35 @@ pub struct Reference {
     pub atlas_width: i32,
     pub header: Vec<String>,
     pub widths: Vec<i32>,
+    /// The original game's own font of this name (data/originals.txt, since 2026-11-09):
+    /// its atlas width and its TXI header as written; 0 and empty where not known.
+    pub original_atlas: i32,
+    pub original_header: Vec<String>,
+}
+
+/// The 17 fonts' measurements: KMRP's HD Original (references.txt) and the original
+/// game's own (originals.txt).
+pub fn references(hd: &str, originals: &str) -> HashMap<String, Reference> {
+    let mut all = Reference::parse(hd);
+    for (name, game) in Reference::parse(originals) {
+        if let Some(r) = all.get_mut(&name) {
+            r.original_atlas = game.atlas_width;
+            r.original_header = game.header;
+        }
+    }
+    all
+}
+
+/// A field of a TXI header given as lines ("key value"), the key in any case.
+fn header_field(header: &[String], name: &str) -> Option<f64> {
+    header.iter().find_map(|line| {
+        let mut parts = line.split_whitespace();
+        if parts.next()?.eq_ignore_ascii_case(name) {
+            parts.next()?.parse().ok()
+        } else {
+            None
+        }
+    })
 }
 
 impl Reference {
@@ -285,14 +314,23 @@ fn hinted_ink(contours: &Contours) -> Option<Ink> {
 pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Target) -> Result<(), FontError> {
     let original = target == Target::Original;
     let divisor = if original { ORIGINAL_DIVISOR } else { 1 };
-    let height = round(reference.glyph_height() as f64 / divisor as f64) as i32;
+    // For the original game, its own font's header where data/originals.txt has it (the
+    // heights are the HD font's divided by six either way: the test checks they agree).
+    let game = original && !reference.original_header.is_empty();
+    let height = match header_field(&reference.original_header, "fontheight") {
+        Some(h) if game => round(h * 100.0) as i32,
+        _ => round(reference.glyph_height() as f64 / divisor as f64) as i32,
+    };
     let (top, bottom) = glyph_box(face);
     let scale = height as f32 / (top + bottom).max(1.0);
     let em = face.units_per_em as f32 * scale;
     let ascent = top * scale;
     // The original game's letters stand on a whole pixel, where hinting puts them.
     let baseline = roundf(ascent) as i32;
-    let count = reference.num_chars();
+    let count = match header_field(&reference.original_header, "numchars") {
+        Some(n) if game => n as usize,
+        _ => reference.num_chars(),
+    };
     let ring = outlined(&reference.resref);
     let ring_width = ring.unwrap_or(0.0) / divisor as f32;
 
@@ -375,11 +413,24 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
     // For KMRP, the atlas is KMRP 1.6's own HD font's size (2026-11-09, the maintainer: "the
     // font converter needs to give the exact size font files for kmrp that kmrp 1.6 currently
     // uses"): the letters in slot order where they fit, as before; else packed tighter
-    // (pack_tight); a larger atlas only when even that does not fit.
-    let mut size = if original { 64 } else { 64.max(reference.atlas_width) };
+    // (pack_tight); a larger atlas only when even that does not fit. For the original game
+    // the same, from the game's own font's size (since 2026-11-09; until then from 64,
+    // doubled), with one more step before a larger atlas: no gap between cells, as the
+    // game's own HUD font packs its letters (its fnt_console: 8 by 16 cells side by side
+    // in 128). The game draws these atlases one texel to one pixel.
+    let mut size = if game && reference.original_atlas > 0 {
+        reference.original_atlas
+    } else if original {
+        64
+    } else {
+        64.max(reference.atlas_width)
+    };
     let blank: Vec<bool> = (0..count).map(|i| hinted[i].is_none() && outlines[i].is_none()).collect();
     let positions = loop {
-        if let Some(p) = pack(&widths, height, size).or_else(|| pack_tight(&widths, &blank, height, size)) {
+        let packed = pack(&widths, height, size, PADDING)
+            .or_else(|| pack_tight(&widths, &blank, height, size, PADDING))
+            .or_else(|| if game { pack_tight(&widths, &blank, height, size, 0) } else { None });
+        if let Some(p) = packed {
             break p;
         }
         size *= 2;
@@ -416,7 +467,7 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
     std::fs::create_dir_all(folder).map_err(|e| FontError(e.to_string()))?;
     write_tga(&folder.join(format!("{}.tga", reference.resref)), size, &alpha, rings.as_deref())
         .map_err(|e| FontError(e.to_string()))?;
-    std::fs::write(folder.join(format!("{}.txi", reference.resref)), txi(reference, &positions, &widths, height, size, divisor))
+    std::fs::write(folder.join(format!("{}.txi", reference.resref)), txi(reference, &positions, &widths, height, size, divisor, game))
         .map_err(|e| FontError(e.to_string()))?;
     Ok(())
 }
@@ -473,7 +524,7 @@ pub fn spread(cell: &[u8], w: usize, h: usize, radius: f32) -> Vec<u8> {
 /// as the widest of them, each keeping its own width, so the game spaces text as before; and
 /// the cells go widest first into the first row with room (first-fit decreasing), so rows end
 /// with less left over. The game reads each slot's place from the TXI, in any order.
-fn pack_tight(widths: &[i32], blank: &[bool], height: i32, size: i32) -> Option<Vec<(i32, i32)>> {
+fn pack_tight(widths: &[i32], blank: &[bool], height: i32, size: i32, padding: i32) -> Option<Vec<(i32, i32)>> {
     let blank_width = (0..widths.len()).filter(|&i| blank[i]).map(|i| widths[i]).max();
     // The items to place: each inked slot, and the one shared blank cell (index None).
     let mut items: Vec<(i32, Option<usize>)> = (0..widths.len()).filter(|&i| !blank[i]).map(|i| (widths[i], Some(i))).collect();
@@ -488,19 +539,19 @@ fn pack_tight(widths: &[i32], blank: &[bool], height: i32, size: i32) -> Option<
         if width > size {
             return None;
         }
-        let row = match rows.iter().position(|&x| x + width + PADDING <= size) {
+        let row = match rows.iter().position(|&x| x + width + padding <= size) {
             Some(r) => r,
             None => {
                 let r = rows.len();
-                if r as i32 * (height + PADDING) + height > size {
+                if r as i32 * (height + padding) + height > size {
                     return None;
                 }
                 rows.push(0);
                 r
             }
         };
-        let at = (rows[row], row as i32 * (height + PADDING));
-        rows[row] += width + PADDING;
+        let at = (rows[row], row as i32 * (height + padding));
+        rows[row] += width + padding;
         match slot {
             Some(i) => positions[i] = at,
             None => blank_at = at,
@@ -514,19 +565,19 @@ fn pack_tight(widths: &[i32], blank: &[bool], height: i32, size: i32) -> Option<
     Some(positions)
 }
 
-fn pack(widths: &[i32], height: i32, size: i32) -> Option<Vec<(i32, i32)>> {
+fn pack(widths: &[i32], height: i32, size: i32, padding: i32) -> Option<Vec<(i32, i32)>> {
     let mut positions = Vec::with_capacity(widths.len());
     let (mut x, mut y) = (0, 0);
     for &width in widths {
-        if x + width + PADDING > size {
+        if x + width + padding > size {
             x = 0;
-            y += height + PADDING;
+            y += height + padding;
         }
         if y + height > size || width > size {
             return None;
         }
         positions.push((x, y));
-        x += width + PADDING;
+        x += width + padding;
     }
     Some(positions)
 }
@@ -560,13 +611,19 @@ pub fn f(v: f64) -> String {
     format!("{}{}.{:06}", sign, n / 1_000_000, n % 1_000_000)
 }
 
-fn txi(reference: &Reference, positions: &[(i32, i32)], widths: &[i32], height: i32, size: i32, divisor: i32) -> String {
+/// The TXI text. For the original game with its own font's header (`game`): that header
+/// line for line, misspelt keys and all, only texturewidth set to the atlas written, and
+/// every line ended CR LF as the game's are (2026-11-09; until then the HD font's header
+/// with its lengths divided by six, and LF). Otherwise the HD font's header, as before.
+#[allow(clippy::too_many_arguments)]
+fn txi(reference: &Reference, positions: &[(i32, i32)], widths: &[i32], height: i32, size: i32, divisor: i32, game: bool) -> String {
     let mut b = String::new();
-    for line in &reference.header {
-        let key = line.split(' ').next().unwrap_or("");
-        if key == "texturewidth" {
-            b += &format!("texturewidth {}\n", f(size as f64 / 100.0));
-        } else if divisor != 1 && LENGTHS.contains(&key) {
+    let header = if game { &reference.original_header } else { &reference.header };
+    for line in header {
+        let key = line.split_whitespace().next().unwrap_or("");
+        if key.eq_ignore_ascii_case("texturewidth") {
+            b += &format!("{} {}\n", key, f(size as f64 / 100.0));
+        } else if !game && divisor != 1 && LENGTHS.contains(&key) {
             b += &format!("{} {}\n", key, f(reference.field(key) / divisor as f64));
         } else {
             b += line;
@@ -581,6 +638,9 @@ fn txi(reference: &Reference, positions: &[(i32, i32)], widths: &[i32], height: 
     b += &format!("lowerrightcoords {}\n", positions.len());
     for (i, p) in positions.iter().enumerate() {
         b += &format!("{} {} 0\n", f((p.0 + widths[i]) as f64 / s), f(1.0 - (p.1 + height) as f64 / s));
+    }
+    if game {
+        b = b.replace('\n', "\r\n");
     }
     b
 }
@@ -834,8 +894,8 @@ mod tests {
         let mut widths = vec![16; 10];
         widths.extend([50; 6]);
         let blank: Vec<bool> = (0..16).map(|i| i < 10).collect();
-        assert!(pack(&widths, 30, 128).is_none());
-        let p = pack_tight(&widths, &blank, 30, 128).expect("fits tight");
+        assert!(pack(&widths, 30, 128, PADDING).is_none());
+        let p = pack_tight(&widths, &blank, 30, 128, PADDING).expect("fits tight");
         // every blank slot at one place; letters apart, inside the atlas, 4 between
         assert!(p[..10].iter().all(|&q| q == p[0]));
         assert!(p[0].0 + 16 + PADDING <= 128 && p[0].1 + 30 <= 128);

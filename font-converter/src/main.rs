@@ -26,6 +26,8 @@ use atlas::Target;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub const REFERENCES: &str = include_str!("../data/references.txt");
+// The original game's own fonts' atlas widths and TXI headers (make_data.py).
+pub const ORIGINALS: &str = include_str!("../data/originals.txt");
 pub const EXAMPLES: &str = include_str!("../data/examples.txt");
 pub const KMRP_LOGO: &[u8] = include_bytes!("../kmrp-logo.png");
 // The same lockup saying KOTOR, for fonts made for the original game (2026-11-08).
@@ -133,7 +135,7 @@ fn main() {
 /// nothing was converted or it failed. No Replace question, as with the C# program's
 /// `--exit`.
 fn headless(args: Args) -> i32 {
-    let references = Arc::new(atlas::Reference::parse(REFERENCES));
+    let references = Arc::new(atlas::references(REFERENCES, ORIGINALS));
     let mut tiles = tiles::all(EXAMPLES);
     let message = |title: &str, body: &str| eprintln!("{title}: {body}");
     for spec in &args.fonts {

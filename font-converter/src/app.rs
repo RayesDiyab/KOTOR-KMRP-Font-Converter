@@ -356,7 +356,7 @@ impl App {
             ctx,
             theme,
             tiles: tiles::all(crate::EXAMPLES),
-            references: Arc::new(Reference::parse(crate::REFERENCES)),
+            references: Arc::new(atlas::references(crate::REFERENCES, crate::ORIGINALS)),
             kmrp_logo: decode(crate::KMRP_LOGO),
             kotor_logo: decode(crate::KOTOR_LOGO),
             gear: decode(crate::GEAR).map(|g| crop_ink(&g)),

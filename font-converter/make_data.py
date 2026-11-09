@@ -11,6 +11,13 @@ builds on its own (`build.ps1 -Refresh` runs this again):
     rest), its atlas width, and each slot's width in pixels. A slot the chosen font has
     no letter for keeps this width, so no glyph is ever zero wide (a zero-wide glyph
     crashes the game's word wrap, see build_font_from_ttf.measure).
+  * `originals.txt` (since 2026-11-09): for each of the 17, the original game's own font as
+    KMRP's Original Font has it (KMRP's build/native-runtime/original-fonts, kmrfogNN,
+    which tools/build_original_fonts.py copies out of the game's GUI textures, repairing
+    the header of fnt_d10x10b and fnt_d16x16): its atlas width and its TXI header, line for
+    line as written, misspelt keys included. Numbers only: no atlas, no letter of the
+    game's (AGENTS.md rule 3). The converter makes the original game's fonts at these sizes
+    and with these headers.
   * The examples on the converter's tiles: each line drawn in the HD Original font at
     three times the size it is shown, as a PNG, and `examples.txt`, which says what each
     tile shows and how, so the converter can draw the same lines in the player's font.
@@ -34,6 +41,28 @@ sys.path.insert(0, str(HERE.parent / "tools"))
 from kmrp_checkout import kmrp_root  # noqa: E402
 # KMRP's HD Original atlases: in the KMRP checkout beside this repository (2026-11-08).
 HD = kmrp_root() / "assets" / "hd-original-fonts"
+# The original game's fonts as KMRP's build copies them out of the game (kmrfogNN, in the
+# order of KMRP's tools/build_scaled_fonts.py FONT_RESREFS); made by KMRP's build, so they
+# are there only in a KMRP checkout that has been built.
+ORIGINALS = kmrp_root() / "build" / "native-runtime" / "original-fonts"
+GAME_ORDER = ("dialogfont10x10", "dialogfont10x10a", "dialogfont10x10b", "dialogfont12x16",
+              "dialogfont16x16", "dialogfont16x16a", "dialogfont16x16b", "dialogfont32x32",
+              "fnt_console", "fnt_credits", "fnt_creditsa", "fnt_creditsb", "fnt_d10x10b",
+              "fnt_d16x16", "fnt_d16x16a", "fnt_d16x16b", "fnt_dialog16x16", "fnt_galahad14")
+
+
+def original(resref: str) -> tuple[int, list[str]]:
+    """The original game's atlas width for `resref` and its TXI header lines, as written."""
+    stem = ORIGINALS / f"kmrfog{GAME_ORDER.index(resref):02d}"
+    tga = (stem.with_suffix(".tga")).read_bytes()
+    text = stem.with_suffix(".txi").read_bytes().decode("latin-1").replace("\r\n", "\n").replace("\r", "\n")
+    header = []
+    for line in text.split("\n"):
+        if line.strip().lower().startswith("upperleftcoords"):
+            break
+        if line.strip():
+            header.append(line.strip())
+    return tga[12] | tga[13] << 8, header
 
 # The 17 fonts the converter writes: the game's 18 less fnt_galahad14, which is game art
 # made at build time and never a text font the player sees in menus.
@@ -138,6 +167,13 @@ def main() -> int:
             for line in atlas.header:
                 file.write(f"  {line}\n")
             file.write("  widths " + " ".join(map(str, atlas.slot_widths())) + "\n")
+
+    with open(out / "originals.txt", "w", encoding="ascii", newline="\n") as file:
+        for resref in FONTS:
+            width, header = original(resref)
+            file.write(f"font {resref} {width}\n")
+            for line in header:
+                file.write(f"  {line}\n")
 
     with open(out / "examples.txt", "w", encoding="utf-8", newline="\n") as file:
         for tile, lines in EXAMPLES.items():

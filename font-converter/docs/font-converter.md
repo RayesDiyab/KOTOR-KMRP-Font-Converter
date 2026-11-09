@@ -32,8 +32,8 @@ looked at there: the HUD's numbers, the end credits, Menu Large.
 and linux (intel and silicon) appimage version"). One source now builds the Windows exe, a
 macOS app for Apple silicon and Intel, and Linux AppImages for x86_64 and aarch64. Fonts are
 read and the original game's letters hinted by the program itself instead of Windows'
-DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,505,984
-bytes, SHA-256 `C8809F9D2B89A9D9F56E3FB8149F39276730B8CBEE9490386572F283CFB7F758`. What
+DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,514,176
+bytes, SHA-256 `6D12031699CC1DDEE5CEA50337A5A7F42791B21207D8F1C3D666107FF19940CB`. What
 changed in what it writes is measured in section 9. **Not yet seen in the game:** any font
 the Rust program wrote; the game sightings above are of the C# program's fonts. **Not yet
 run:** the macOS app (no Mac here), the Linux window and the aarch64 AppImage.
@@ -59,7 +59,7 @@ Split by job on 2026-11-08 (audit: the window was one 1,848-line file).
 | `kmrp-logo.png`, `kotor-logo.png` | The logo, `tools/build_brand_image.py --text KMRP --tracking 0.12 --whole-crest`, 714x535 made 400x300; the same with `--text KOTOR`, at the same scale, 486x302 (2026-11-08). The KMRP one remade this way is pixel for pixel the committed file |
 | `font-logo.png` | The repository README's logo, not built into the program: the same tool with `--text FONT`, at full size, 677x539 (2026-11-09) |
 | `release/make_press_kit.py`, `release/press-kit/` | The press kit's five pages, in the converter's own style, from screenshots kept out of the repository (its README says where each came from) |
-| `make_data.py`, `data/` | Makes `data/`: `references.txt`, `examples.txt` and the example PNGs, from KMRP's `assets/hd-original-fonts`; committed, so the converter builds without the rest of KMRP |
+| `make_data.py`, `data/` | Makes `data/`: `references.txt`, `examples.txt` and the example PNGs, from KMRP's `assets/hd-original-fonts`; and since 2026-11-09 `originals.txt`, the original game's 17 fonts' atlas widths and TXI headers, from a built KMRP checkout's `build/native-runtime/original-fonts` (numbers only, no atlas or letter of the game's). Committed, so the converter builds without the rest of KMRP. Run again on 2026-11-09, it gave the other files byte for byte |
 | `favicon.ico`, `make_icon.py` | The program's icon, compiled into the exe (`/win32icon`); the window takes it from there. Since 2026-11-09 the sigil above FONT, made by `make_icon.py` from `font-logo.png` centred on a transparent square, at 16, 24, 32, 48, 64, 128 and 256 pixels (the maintainer: "make the app icon be the sigil with FONT below it like in the readme"). Until then a copy of KMRP's installer icon, `src/patcher/favicon.ico` (370,070 bytes; the new one is 97,129, which made the exe 272,896 bytes smaller). FONT reads from 24 pixels up; at 16 it is the shape of the word |
 | `settings.png` | The Settings button's gear: the installer's `src/patcher/icons/Settings.png` cropped to its ink and made 512 px, drawn in one colour from its alpha |
 | `fonts/` | The window's text: KMRP Original HD Menu (titles) and Descriptions (text), TrueType copies from `fonts/KMRP-OriginalHD.ttc`'s build (GDI+ cannot load the OTF files' CFF outlines), SIL OFL 1.1, with `OFL.txt`; compiled in and loaded from memory |
@@ -96,9 +96,9 @@ original KOTOR and one for KMRP"), chosen in the Version box beside Convert:
 
 | | KMRP | Original Game |
 | --- | --- | --- |
-| Size | The Original HD Font's: its TXI header (fontheight, baselineheight, spacing, numchars) unchanged, six times the original fonts | The original fonts': fontheight, baselineheight, spacingR and spacingB divided by six. Each divides exactly (10, 12, 14, 16, 19 and 32 pixels), and `Test-FontConverter.py` finds them equal to the game's own TXI values |
+| Size | The Original HD Font's: its TXI header (fontheight, baselineheight, spacing, numchars) unchanged, six times the original fonts | The original game's own fonts': each TXI header is the game's line for line (`data/originals.txt`, since 2026-11-09), only `texturewidth` set to the atlas, with the game's CR LF line ends. The heights are 10, 12, 14, 16, 19 and 32 pixels, the HD sizes divided by six. Until 2026-11-09 the HD header with fontheight, baselineheight, spacingR and spacingB divided by six, which differed from the game's in one value: `fnt_console`'s spacingR, 0.01 against the game's 0.02 |
 | Letters | Drawn here from the outlines, exact-area coverage | Hinted by the font's own instructions (`LoadedFace::hinter` in `src/font.rs`: skrifa's TrueType and PostScript hinting, its automatic hinter for a TrueType font with none, FreeType's normal target), made 0.3 pixels wider sideways (`embolden_x` in `src/atlas.rs`, section 9), then filled by the converter's own rasteriser, each letter standing on a whole pixel, so text of 10 to 19 pixels is crisp. Where a font's hints cannot be run, the outlines unhinted, every letter alike. Until 2026-11-09 drawn by Windows (DirectWrite's GDI-classic greyscale); section 9 measures the difference |
-| Atlas | The size of KMRP 1.6's own HD atlas for that name (1024, 2048 or 4096): the letters in slot order where they fit, else packed tighter (`pack_tight`: the blank slots share one empty cell, the letters widest first); a larger atlas only where neither fits (none of the nine fonts the test converts, 2026-11-09). Until 2026-11-09 it doubled as soon as slot order did not fit | Starts at 64, doubles: a power of two like the game's own; packed the same way |
+| Atlas | The size of KMRP 1.6's own HD atlas for that name (1024, 2048 or 4096): the letters in slot order where they fit, else packed tighter (`pack_tight`: the blank slots share one empty cell, the letters widest first); a larger atlas only where neither fits (none of the nine fonts the test converts, 2026-11-09). Until 2026-11-09 it doubled as soon as slot order did not fit | The size of the game's own atlas for that name (128, 256 or 512): slot order, else tight, else (as the game's own HUD font) tight with no gap between cells; a larger atlas only where the letters cannot fit even so (one font in the test: KMRP's own HD Console face's HUD letters, 1,128 pixels of cells where 128 square holds 1,024). Until 2026-11-09 from 64, doubled until the letters fit in slot order, which gave the game's size for 16 of the 17 and 256 for `fnt_console` |
 | In the game | KMRP fits each to its drawn size and offers them as **Modded Font** ([ingame-text-options.md](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/ingame-text-options.md) section 3) | The game draws them one texel to one pixel, as its own: the same size as the game's text, which is small on a modern screen |
 
 *Corrected 2026-11-08, the same day:* the first original-game build took ClearType's
@@ -341,10 +341,10 @@ to the download from WSL. The macOS app was not made: that needs a Mac.
 
 | Package (1.0.0, Rust) | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `KMRP Font Converter.exe` | 6,505,984 | `C8809F9D2B89A9D9F56E3FB8149F39276730B8CBEE9490386572F283CFB7F758` |
-| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,613,879 | `69162478F7A8D0D3356A0DE3A990F619AEEAF926D94D598B689122E8F9A8D381` |
-| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,081,592 | `CE601F37D20CF35BD0E2256569FCC836D545DADCED48A17F219D64E3D5AA0A39` |
-| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,766,216 | `0B6D7649253E17A313C83778C80BBEC8D8CD87DD1C4BD556AD1A3FBA30BFEEB0` |
+| `KMRP Font Converter.exe` | 6,514,176 | `6D12031699CC1DDEE5CEA50337A5A7F42791B21207D8F1C3D666107FF19940CB` |
+| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,616,040 | `852EDCB903A1A5BB86BB76C9A4174F547811B23DCB2D28F5A37192F2DD257F86` |
+| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,085,688 | `03274539E374BA5EDBA3517ADF6AC8CBBD495F1FABFFC71A38E887CBCC548C69` |
+| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,766,216 | `2F723C456B7FE88009D24117133AC7ADC8D41E882B4FE087D9BA5D4938E3FA2A` |
 
 The zip and the AppImages hold file times, so they differ at every build; the Windows exe
 inside does not. The exe is 7.7 times the C# one's 840,192 bytes: the window's toolkit, the
@@ -384,7 +384,7 @@ unchanged.
 ## 7. Verifying
 
 `python tests/Test-FontConverter.py` builds the program and runs it, on Windows, macOS or
-Linux (2026-11-09, the Rust exe `C8809F9D...` on Windows 11: all checks passed; 2026-11-08,
+Linux (2026-11-09, the Rust exe `6D120316...` on Windows 11: all checks passed; 2026-11-08,
 the C# exe: all passed). Nine inputs (Arial TTF, KMRP's CFF OTF, KMRP's collection, KMRP's
 TTF, Cambria's collection face, Bahnschrift's variable font, Georgia, and Arial as WOFF and
 WOFF2; KMRP's three added 2026-11-09 so that a machine without Windows' fonts has inputs,
@@ -445,7 +445,7 @@ The Rust program against the C# one (`81D4BD89...`), each converting the same th
 for all eleven tiles, both versions, into empty folders; compared file by file with a
 script in the scratch folder (TXI text byte for byte, TGA alpha pixel by pixel) and glyph by
 glyph (each cell cropped by its TXI coordinates, top-left aligned). Rust build
-`C8809F9D...`, unless a table names another.
+`6D120316...`, unless a table names another.
 
 **KMRP version: the same arithmetic, in KMRP 1.6's own file sizes.** The TXI files of the
 14 fonts outside the Journal tile are the C# program's byte for byte, for all three fonts.
@@ -536,7 +536,33 @@ fnt_d16x16b), against the C# program's, the mean of each:
 more, visibly bold there; 0.25, which left Georgia barely wider (1.3%). 0.3 makes every
 font tried wider than Windows' drew it, by 2 to 4% in spacing and 2 to 7% in the letters,
 and 6 to 11% fuller. With it, three of the 17 atlases of KMRP's Dialogue OTF grew from one
-power of two to the next. **Not yet seen in the game.**
+power of two to the next (since the change below, they are the game's size again). **Not
+yet seen in the game.**
+
+**The game's own sizes, headers and spacing** (2026-11-09, the maintainer: "our original
+game font output should match size, etc., and spacing of the original game", the same way
+as KMRP's). The game's 17 fonts, as KMRP's Original Font has them (`kmrfog00..16`, which
+KMRP's `tools/build_original_fonts.py` copies out of the game's GUI textures), against the
+converter's for Arial, Georgia and KMRP's Dialogue OTF:
+
+| | Before | After |
+| --- | --- | --- |
+| Atlas sizes the game's | 16 of 17: `fnt_console` 256, the game's 128 | 17 of 17 for all three; every `.tga` the same size in bytes as the game's |
+| TXI header | the HD header divided by six: the same values but `fnt_console`'s spacingR, 0.01 against the game's 0.02; the game's misspelt `compress texture` (`dialogfont10x10b`) and `compresstexure` (`fnt_creditsb`, which also has no `filter` line) not there | the game's, line for line, misspelt keys and all: 17 of 17 the same text for all three |
+| Line ends | LF | CR LF, as the game's |
+
+The game's HUD font is 127 characters in 8 by 16 cells side by side, no gap, 128 square; its
+31 control codes share one empty cell. The converter's HUD letters, drawn with their black
+ring, are wider (983 pixels of cells for Georgia's 95), and fit 128 only with no gap between
+cells, which is the step added before a larger atlas: tight packing with no gap, as the game
+packs its own. The game's other fonts leave gaps (a 16-column grid) and are not changed by
+this: slot order with 4 pixels between cells still fits them. HUD text drawn back from
+Georgia's 128 atlas reads as from its 256 one, no letter reaching into the next. KMRP's own
+HD Console face cannot fit: its HUD letters need 1,128 pixels where 128 square holds 1,024,
+so its `fnt_console` is 256, and the test allows a larger atlas only where it computes the
+letters cannot fit. Where the game's fonts' `.txi` text came from: KMRP's copies end their
+lines CR CR LF, as its script writes the game's CR LF text through Python's text mode on
+Windows; the converter writes CR LF. **Not yet seen in the game.**
 
 **What else changed with the rewrite**, all in sections 1, 3, 5 and 6: the window is egui's
 (the same layout; the 16:9 drag gone; fitted to the screen as KMSE); `--convert --exit`

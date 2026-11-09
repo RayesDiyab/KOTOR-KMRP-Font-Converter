@@ -86,8 +86,8 @@ does not change what the text says, or the size of the game's text in the origin
 ending from any `*.tpc.before-font-converter`. The names are listed in the readme that
 comes with the program, [release/README.txt](font-converter/release/README.txt).
 
-**The 1.0.0 Windows program** is 6,505,984 bytes, SHA-256
-`C8809F9D2B89A9D9F56E3FB8149F39276730B8CBEE9490386572F283CFB7F758`, built
+**The 1.0.0 Windows program** is 6,514,176 bytes, SHA-256
+`6D12031699CC1DDEE5CEA50337A5A7F42791B21207D8F1C3D666107FF19940CB`, built
 deterministically: the same sources give the same bytes (a rebuild from clean gave the
 same SHA-256, 2026-11-09). It is **not signed**, so Windows SmartScreen and some antivirus
 programs may warn; it has not yet been scanned on VirusTotal. The macOS app is signed ad
@@ -118,9 +118,9 @@ and Menu Large.
 
 | | KMRP | Original Game |
 | --- | --- | --- |
-| Size | The KMRP Original HD Font's: six times the game's fonts | The game's own: the HD sizes divided by six, which divide exactly |
+| Size | The KMRP Original HD Font's: six times the game's fonts | The game's own: its fonts' TXI headers line for line (heights, spacing), the HD sizes divided by six |
 | Letters | Drawn from the font's outlines, exact-area coverage | Hinted by the font's own instructions (skrifa, FreeType's normal target) and made 0.3 pixels wider, a little wider than Windows drew them, each letter on a whole pixel, so 10-pixel text stays sharp. Until 2026-11-09 drawn by Windows (DirectWrite) |
-| Atlas | The size of KMRP 1.6's own HD atlas for each name, so the files are the size of KMRP's (since 2026-11-09; the Journal's three were twice as wide and high before) | From 64 pixels, doubled: a power of two like the game's |
+| Atlas | The size of KMRP 1.6's own HD atlas for each name, so the files are the size of KMRP's (since 2026-11-09; the Journal's three were twice as wide and high before) | The size of the game's own atlas for each name, so the files are the size of the game's (since 2026-11-09; the HUD font's was twice as wide and high before) |
 | In the game | KMRP fits them to their drawn size, as Modded Font | The game draws them one texel to one pixel, as its own |
 
 Each font is written as the game's own: a 32-bit TGA atlas and a TXI file of
