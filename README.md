@@ -86,8 +86,8 @@ does not change what the text says, or the size of the game's text in the origin
 ending from any `*.tpc.before-font-converter`. The names are listed in the readme that
 comes with the program, [release/README.txt](font-converter/release/README.txt).
 
-**The 1.0.0 Windows program** is 6,495,744 bytes, SHA-256
-`F64D66A255791E56FC8C10811A41EA9BDB1E6B847D3D83DE54A5F36968AE9071`, built
+**The 1.0.0 Windows program** is 6,497,280 bytes, SHA-256
+`AB195B7AA8C84F6A3B7F170CB49E823A3E858668E8A4A5A2B09775DC7AD5F9EF`, built
 deterministically: the same sources give the same bytes (a rebuild from clean gave the
 same SHA-256, 2026-11-09). It is **not signed**, so Windows SmartScreen and some antivirus
 programs may warn; it has not yet been scanned on VirusTotal. The macOS app is signed ad
@@ -119,7 +119,7 @@ and Menu Large.
 | | KMRP | Original Game |
 | --- | --- | --- |
 | Size | The KMRP Original HD Font's: six times the game's fonts | The game's own: the HD sizes divided by six, which divide exactly |
-| Letters | Drawn from the font's outlines, exact-area coverage | Hinted by the font's own instructions (skrifa, FreeType's normal target), each letter on a whole pixel, so 10-pixel text stays sharp. Until 2026-11-09 drawn by Windows (DirectWrite) |
+| Letters | Drawn from the font's outlines, exact-area coverage | Hinted by the font's own instructions (skrifa, FreeType's normal target) and made 0.3 pixels wider, a little wider than Windows drew them, each letter on a whole pixel, so 10-pixel text stays sharp. Until 2026-11-09 drawn by Windows (DirectWrite) |
 | Atlas | From the HD atlas's width, doubled until the letters fit | From 64 pixels, doubled: a power of two like the game's |
 | In the game | KMRP fits them to their drawn size, as Modded Font | The game draws them one texel to one pixel, as its own |
 

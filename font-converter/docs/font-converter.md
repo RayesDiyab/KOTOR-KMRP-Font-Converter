@@ -32,8 +32,8 @@ looked at there: the HUD's numbers, the end credits, Menu Large.
 and linux (intel and silicon) appimage version"). One source now builds the Windows exe, a
 macOS app for Apple silicon and Intel, and Linux AppImages for x86_64 and aarch64. Fonts are
 read and the original game's letters hinted by the program itself instead of Windows'
-DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,495,744
-bytes, SHA-256 `F64D66A255791E56FC8C10811A41EA9BDB1E6B847D3D83DE54A5F36968AE9071`. What
+DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,497,280
+bytes, SHA-256 `AB195B7AA8C84F6A3B7F170CB49E823A3E858668E8A4A5A2B09775DC7AD5F9EF`. What
 changed in what it writes is measured in section 9. **Not yet seen in the game:** any font
 the Rust program wrote; the game sightings above are of the C# program's fonts. **Not yet
 run:** the macOS app (no Mac here), the Linux window and the aarch64 AppImage.
@@ -97,7 +97,7 @@ original KOTOR and one for KMRP"), chosen in the Version box beside Convert:
 | | KMRP | Original Game |
 | --- | --- | --- |
 | Size | The Original HD Font's: its TXI header (fontheight, baselineheight, spacing, numchars) unchanged, six times the original fonts | The original fonts': fontheight, baselineheight, spacingR and spacingB divided by six. Each divides exactly (10, 12, 14, 16, 19 and 32 pixels), and `Test-FontConverter.py` finds them equal to the game's own TXI values |
-| Letters | Drawn here from the outlines, exact-area coverage | Hinted by the font's own instructions (`LoadedFace::hinter` in `src/font.rs`: skrifa's TrueType and PostScript hinting, its automatic hinter for a TrueType font with none, FreeType's normal target), then filled by the converter's own rasteriser, each letter standing on a whole pixel, so text of 10 to 19 pixels is crisp. Where a font's hints cannot be run, the outlines unhinted, every letter alike. Until 2026-11-09 drawn by Windows (DirectWrite's GDI-classic greyscale); section 9 measures the difference |
+| Letters | Drawn here from the outlines, exact-area coverage | Hinted by the font's own instructions (`LoadedFace::hinter` in `src/font.rs`: skrifa's TrueType and PostScript hinting, its automatic hinter for a TrueType font with none, FreeType's normal target), made 0.3 pixels wider sideways (`embolden_x` in `src/atlas.rs`, section 9), then filled by the converter's own rasteriser, each letter standing on a whole pixel, so text of 10 to 19 pixels is crisp. Where a font's hints cannot be run, the outlines unhinted, every letter alike. Until 2026-11-09 drawn by Windows (DirectWrite's GDI-classic greyscale); section 9 measures the difference |
 | Atlas | Starts at the HD atlas's width, doubles until the letters fit | Starts at 64, doubles: a power of two like the game's own |
 | In the game | KMRP fits each to its drawn size and offers them as **Modded Font** ([ingame-text-options.md](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/ingame-text-options.md) section 3) | The game draws them one texel to one pixel, as its own: the same size as the game's text, which is small on a modern screen |
 
@@ -341,10 +341,10 @@ to the download from WSL. The macOS app was not made: that needs a Mac.
 
 | Package (1.0.0, Rust) | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `KMRP Font Converter.exe` | 6,495,744 | `F64D66A255791E56FC8C10811A41EA9BDB1E6B847D3D83DE54A5F36968AE9071` |
-| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,607,636 | `909387ED5C38D78954EC2372F19A2ABE2C703948EC1F535AE815CF16DA2272EF` |
-| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,085,688 | `6514E228A735986D783EE3E3F316E6D494029CEE13F206AFC4E970596E28F9E6` |
-| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,766,216 | `588FA3BCB4E51133FE093B6A7923776D7CD4D9B0406DCD24B0B8D2660FF1FE11` |
+| `KMRP Font Converter.exe` | 6,497,280 | `AB195B7AA8C84F6A3B7F170CB49E823A3E858668E8A4A5A2B09775DC7AD5F9EF` |
+| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,608,877 | `D86D087DD5B7B8212653C09AD4DFC64B164C613D43A611FC6AA063D943E15F43` |
+| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,081,592 | `7B413105BB8F055BBB9010A1EC3E7588EDEB1642A75CEDBE7FCA622313B26687` |
+| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,762,120 | `78D1622F46F1407802F634CB6EE2B37F7CDA0930FD034EBC0C51328D173F00C7` |
 
 The zip and the AppImages hold file times, so they differ at every build; the Windows exe
 inside does not. The exe is 7.7 times the C# one's 840,192 bytes: the window's toolkit, the
@@ -384,7 +384,7 @@ unchanged.
 ## 7. Verifying
 
 `python tests/Test-FontConverter.py` builds the program and runs it, on Windows, macOS or
-Linux (2026-11-09, the Rust exe `F64D66A2...` on Windows 11: all checks passed; 2026-11-08,
+Linux (2026-11-09, the Rust exe `AB195B7A...` on Windows 11: all checks passed; 2026-11-08,
 the C# exe: all passed). Nine inputs (Arial TTF, KMRP's CFF OTF, KMRP's collection, KMRP's
 TTF, Cambria's collection face, Bahnschrift's variable font, Georgia, and Arial as WOFF and
 WOFF2; KMRP's three added 2026-11-09 so that a machine without Windows' fonts has inputs,
@@ -395,8 +395,8 @@ a power-of-two atlas there; ink in the dialogue font's A; no work folder left); 
 bytes, an empty file, a font with digits only and a WOFF claiming 2 GB refused with nothing
 written; a `.tpc` set aside earlier kept and the next one set aside as `-2`; a read-only file
 stopping the conversion with nothing changed; and the window closed while converting,
-leaving nothing (Windows only: the check sends `WM_CLOSE`). Each set took 0.3 to 0.9 s
-(2026-11-09, Rust: 0.7 to 0.9 s for KMRP, 0.3 to 0.6 s for the original game; the C#
+leaving nothing (Windows only: the check sends `WM_CLOSE`). Each set took 0.3 to 1.2 s
+(2026-11-09, Rust: 0.7 to 1.2 s for KMRP, 0.3 to 0.6 s for the original game; the C#
 program took 1.0 to 1.1 s and 0.5 to 0.7 s).
 
 *Corrected 2026-11-09:* the close check looked for the program's visible window. Under the
@@ -406,8 +406,9 @@ finds the window by its title and process. Traced by hand: `WM_CLOSE` during a c
 of all eleven tiles, the program exited 1 s later with nothing in the folder.
 
 `cargo test` runs the unit tests in `src/atlas.rs`: .NET's half-to-even rounding, the TXI's
-numbers rounded as .NET Framework wrote them, the Windows-1252 slots, and the rasteriser's
-coverage of a square.
+numbers rounded as .NET Framework wrote them, the Windows-1252 slots, the rasteriser's
+coverage of a square, and the original game's widening (a square of either winding 0.3
+wider from the same left edge, no taller).
 
 On Linux and macOS (2026-11-09): the x86_64 Linux program, and the same inside its
 AppImage, converted for both versions under WSL's Ubuntu 20.04 (the dialogue tile, 4
@@ -444,7 +445,7 @@ The Rust program against the C# one (`81D4BD89...`), each converting the same th
 for all eleven tiles, both versions, into empty folders; compared file by file with a
 script in the scratch folder (TXI text byte for byte, TGA alpha pixel by pixel) and glyph by
 glyph (each cell cropped by its TXI coordinates, top-left aligned). Rust build
-`F64D66A2...`.
+`AB195B7A...`.
 
 **KMRP version: the same arithmetic.** The TXI files are the C# program's byte for byte for
 Georgia and KMRP's Dialogue OTF, all 17 each. For Arial, 14 of 17 are; the other three
@@ -476,10 +477,38 @@ rasteriser. Four of skrifa's targets were tried against the C# program's letters
 (The mean difference is over the pixels inked in either, of 255.) *Rejected:* Mono, whose
 Georgia was visibly jagged at 10 pixels in a side-by-side picture of "Combat Movement
 Georgia"; unhinted, which is soft; keeping DirectWrite on Windows alone, which would have
-made the fonts differ by the system they were made on. With Normal the letters are a little
-narrower than Windows' (GDI-classic widens stems to whole pixels across), and their heights,
-baselines and the TXI's header fields are the same, as the regression test checks against
-the game's own. **Not yet seen in the game.**
+made the fonts differ by the system they were made on. With Normal alone the letters were
+a little narrower and lighter than Windows' (GDI-classic widens stems to whole pixels
+across); their heights, baselines and the TXI's header fields are the same, as the
+regression test checks against the game's own. (This table was measured on the builds of
+2026-11-09 before the widening below.)
+
+**Widened, 2026-11-09** (the maintainer: "I would prefer if it was like slightly wider
+instead of slightly narrower"). Each hinted letter of the original-game version is made
+`ORIGINAL_WIDEN` (0.3 of the game's pixels) wider: `embolden_x` in `src/atlas.rs` moves
+every edge out sideways by half of it along the miter of its two neighbours, as FreeType's
+`FT_Outline_EmboldenXY` with no vertical strength, then the letter right by the other half,
+so its left side bearing stays; its advance is the design advance plus 0.3, rounded. The
+KMRP version is not widened (its figures above are unchanged). Measured over A to Z, a to z
+and 0 to 9 in six of the fonts (dialogfont10x10, 12x16, 16x16, 32x32, fnt_d16x16,
+fnt_d16x16b), against the C# program's, the mean of each:
+
+| Version | Arial: cell, ink width, ink amount | Georgia | KMRP Dialogue |
+| --- | --- | --- | --- |
+| Normal alone | 0.997, 1.032, 0.982 | 0.985, 0.985, 0.995 | 1.000, 1.006, 0.979 |
+| Advances rounded up, no widening | 1.033, 1.032, 0.982 | 1.008, 0.985, 0.995 | 1.046, 1.006, 0.979 |
+| Widened 0.25 | 1.036, 1.063, 1.079 | 1.013, 1.013, 1.089 | 1.021, 1.034, 1.050 |
+| **Widened 0.3, chosen** (`AB195B7A...`) | 1.042, 1.069, 1.099 | 1.022, 1.021, 1.108 | 1.026, 1.040, 1.064 |
+| Widened 0.35 | 1.047, 1.076, 1.118 | 1.027, 1.030, 1.126 | 1.031, 1.049, 1.078 |
+| Widened 0.4 | 1.055, 1.087, 1.138 | 1.032, 1.035, 1.145 | 1.033, 1.051, 1.092 |
+| Widened 0.6 | 1.092, 1.119, 1.215 | 1.055, 1.055, 1.220 | 1.073, 1.078, 1.148 |
+
+*Rejected:* rounding the advances up, which widened only the spacing and opened gaps
+("Com bat", wide word spaces) in a side-by-side picture of Georgia at 10 pixels; 0.4 and
+more, visibly bold there; 0.25, which left Georgia barely wider (1.3%). 0.3 makes every
+font tried wider than Windows' drew it, by 2 to 4% in spacing and 2 to 7% in the letters,
+and 6 to 11% fuller. With it, three of the 17 atlases of KMRP's Dialogue OTF grew from one
+power of two to the next. **Not yet seen in the game.**
 
 **What else changed with the rewrite**, all in sections 1, 3, 5 and 6: the window is egui's
 (the same layout; the 16:9 drag gone; fitted to the screen as KMSE); `--convert --exit`

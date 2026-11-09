@@ -106,6 +106,11 @@ pub const ORIGINAL_DIVISOR: i32 = 6;
 /// The largest atlas written: KMRP's own largest (dialogfont32x32 at six times). A font that
 /// needs more is refused rather than written as a picture of a gigabyte or more (audit F4).
 pub const MAX_SIZE: i32 = 4096;
+/// How much wider, in the original game's pixels, each hinted letter is made: its strokes
+/// thicker sideways and its advance as much longer (2026-11-09, the maintainer: "I would
+/// prefer if it was like slightly wider instead of slightly narrower" than Windows' drawing
+/// of the C# program). Chosen from 0.25, 0.3, 0.35, 0.4 and 0.6 against that drawing.
+pub const ORIGINAL_WIDEN: f32 = 0.3;
 
 /// Rounds half to even, as .NET's Math.Round, so the arithmetic is the C# program's.
 pub fn round(v: f64) -> f64 {
@@ -210,6 +215,44 @@ struct Ink {
     bottom: i32,
 }
 
+/// The outline made `strength` pixels wider, its strokes thicker sideways only, as FreeType's
+/// FT_Outline_EmboldenXY does with no vertical strength: every edge moves out by half the
+/// strength along its normal's horizontal part, each point by the miter of its two edges
+/// (capped, so a sharp corner does not spike); then the whole is moved right by half, so the
+/// left side bearing stays and the right grows by the strength.
+pub fn embolden_x(contours: &Contours, strength: f32) -> Contours {
+    let area: f32 = contours
+        .iter()
+        .map(|c| (0..c.len()).map(|i| { let (a, b) = (c[i], c[(i + 1) % c.len()]); a.x * b.y - b.x * a.y }).sum::<f32>())
+        .sum();
+    let outward = if area >= 0.0 { 1.0 } else { -1.0 };
+    let half = strength / 2.0;
+    let normal = |a: P, b: P| -> Option<(f32, f32)> {
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let len = (dx * dx + dy * dy).sqrt();
+        if len < 1e-6 { None } else { Some((outward * dy / len, -outward * dx / len)) }
+    };
+    contours
+        .iter()
+        .map(|c| {
+            let n = c.len();
+            (0..n)
+                .map(|i| {
+                    let p = c[i];
+                    // The nearest distinct neighbours, for points the flattening repeated.
+                    let prev = (1..n).map(|k| c[(i + n - k) % n]).find(|q| (q.x - p.x).abs() + (q.y - p.y).abs() > 1e-6);
+                    let next = (1..n).map(|k| c[(i + k) % n]).find(|q| (q.x - p.x).abs() + (q.y - p.y).abs() > 1e-6);
+                    let (Some(prev), Some(next)) = (prev, next) else { return P { x: p.x + half, y: p.y } };
+                    let (Some(n1), Some(n2)) = (normal(prev, p), normal(p, next)) else { return P { x: p.x + half, y: p.y } };
+                    let d = 1.0 + n1.0 * n2.0 + n1.1 * n2.1;
+                    let mx = if d > 0.25 { (n1.0 + n2.0) / d } else { (n1.0 + n2.0) / 0.25 };
+                    P { x: p.x + half + half * mx.clamp(-2.0, 2.0), y: p.y }
+                })
+                .collect()
+        })
+        .collect()
+}
+
 /// The hinted outline filled in the whole pixels round its ink; None when it has no ink.
 fn hinted_ink(contours: &Contours) -> Option<Ink> {
     let (mut min_x, mut min_y, mut max_x, mut max_y) = (f32::MAX, f32::MAX, f32::MIN, f32::MIN);
@@ -263,10 +306,14 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
         let glyph = slot_character(i).map(|c| slot_glyph(face, c)).unwrap_or(0);
         let mut advance = 0;
         if glyph != 0 {
-            advance = roundf(face.advance(glyph) as f32 * scale) as i32;
+            // The original game's letters a little wider and fuller than the outline (section
+            // 9 of docs/font-converter.md), their advance with them.
+            let widen = if original { ORIGINAL_WIDEN } else { 0.0 };
+            advance = roundf(face.advance(glyph) as f32 * scale + widen) as i32;
             if let Some(h) = hinter.as_ref() {
                 match face.hinted_outline(glyph, h) {
                     Ok(contours) => {
+                        let contours = embolden_x(&contours, widen);
                         if let Some(ink) = hinted_ink(&contours) {
                             let left = ink.left.min(0);
                             advance = advance.max(ink.right - left);
@@ -287,6 +334,8 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
                 }
             } else {
                 let outline = face.outline(glyph, em);
+                // (for KMRP, widen is 0 and the outline is the font's, as before)
+                let outline = if widen > 0.0 { embolden_x(&outline, widen) } else { outline };
                 let (mut min_x, mut max_x) = (f32::MAX, f32::MIN);
                 for p in outline.iter().flatten() {
                     min_x = min_x.min(p.x);
@@ -708,6 +757,22 @@ mod tests {
         assert_eq!(slot_character(0x81), None);
         assert_eq!(slot_character(0x7F), None);
         assert_eq!(slot_character(0x9F), Some(0x0178));
+    }
+
+    #[test]
+    fn widened_sideways_only() {
+        // A 2x2 square, either winding, comes out 2.3 wide from the same left edge, as high.
+        let cw = vec![vec![P { x: 1.0, y: 1.0 }, P { x: 3.0, y: 1.0 }, P { x: 3.0, y: 3.0 }, P { x: 1.0, y: 3.0 }]];
+        let ccw = vec![cw[0].iter().rev().copied().collect::<Vec<P>>()];
+        for square in [cw, ccw] {
+            let w = embolden_x(&square, 0.3);
+            let xs: Vec<f32> = w[0].iter().map(|p| p.x).collect();
+            let ys: Vec<f32> = w[0].iter().map(|p| p.y).collect();
+            let min = xs.iter().copied().fold(f32::MAX, f32::min);
+            let max = xs.iter().copied().fold(f32::MIN, f32::max);
+            assert!((min - 1.0).abs() < 1e-5 && (max - 3.3).abs() < 1e-5, "{xs:?}");
+            assert_eq!(ys, square[0].iter().map(|p| p.y).collect::<Vec<f32>>());
+        }
     }
 
     #[test]

@@ -19,8 +19,8 @@ Nothing has been released from this repository yet: no tag, no GitHub release
 ### KMRP Font Converter 1.0.0
 
 To be released on the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
-maintainer, 2026-11-08). The Windows exe is 6,495,744 bytes, SHA-256
-`F64D66A255791E56FC8C10811A41EA9BDB1E6B847D3D83DE54A5F36968AE9071`, built deterministically
+maintainer, 2026-11-08). The Windows exe is 6,497,280 bytes, SHA-256
+`AB195B7AA8C84F6A3B7F170CB49E823A3E858668E8A4A5A2B09775DC7AD5F9EF`, built deterministically
 from this repository; it and the other packages, and how they were checked, are in
 [font-converter.md](font-converter/docs/font-converter.md) sections 6 and 7.
 
@@ -36,8 +36,10 @@ from this repository; it and the other packages, and how they were checked, are 
   and KMRP's Dialogue OTF; Arial's differ in one cell of three files (K, 50 pixels wide
   against 51).
 - The original game's letters hinted by the font's own instructions (FreeType's normal
-  target) instead of Windows' GDI-classic drawing: the same heights and baselines, letters
-  a little narrower. Measured in font-converter.md section 9; **not yet seen in the game**.
+  target) instead of Windows' GDI-classic drawing, then widened by 0.3 of the game's
+  pixels (the maintainer: "slightly wider instead of slightly narrower"): the same heights
+  and baselines, letters 2 to 7% wider and spacing 2 to 4% wider than Windows drew them.
+  Measured in font-converter.md section 9; **not yet seen in the game**.
 - The window fits itself to the screen as KMSE does (the maintainer: "make it dynamic (like
   kmse smaller on smaller screens)"): it opens as large as the screen allows, shrinks evenly
   down to half the canvas, and follows a move to another screen. The 16:9 edge drag of the
