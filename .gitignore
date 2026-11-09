@@ -1,6 +1,8 @@
 # Build output: the converter's exe and release zip, the test's work folders, the font
 # redraw's intermediate files.
 font-converter/dist/
+# The latest build copied to the repository's root for running and sharing (2026-11-09).
+/dist/
 build/
 __pycache__/
 *.pyc
