@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """The KMRP Font Converter, run: every font type into both versions, and what it must refuse.
 
-Builds font-converter/dist with font-converter/build.ps1 (unless --no-build), then runs the
-program with --convert --exit --out=<an empty folder> and checks what it wrote, as
-docs (font-converter/docs/release-audit-2026-11-08.md, "How it was tested") describe:
+Builds the converter (unless --no-build): font-converter/build.ps1 -NoTests on Windows, else
+cargo build --release. Then runs the program with --convert --exit --out=<an empty folder>,
+which converts without a window, and checks what it wrote, as docs
+(font-converter/docs/font-converter.md section 7) describe:
 
   * every input below, for KMRP (--version=kmrp) and the original game (--version=original):
     all 17 .tga/.txi pairs; TGA type 2 at 32 bits, full length, at most 4096 square; the
@@ -16,14 +17,18 @@ docs (font-converter/docs/release-audit-2026-11-08.md, "How it was tested") desc
     letters, a WOFF whose table claims 2 GB;
   * a .tpc already set aside is not lost: the next one is set aside as -2;
   * a read-only file in the folder stops the conversion before anything changes;
-  * the window closed while converting: nothing written, no work folder left.
+  * the window closed while converting: nothing written, no work folder left (Windows only).
+
+Since 2026-11-09 the converter is a Rust program and this test runs on Windows, macOS and
+Linux. Windows' own fonts (Arial, Cambria, Bahnschrift, Georgia) are used where they are;
+elsewhere the inputs are made from KMRP's own fonts in this repository, which every machine
+has.
 
 No game, Override or setting of the player's is touched: every run writes into a folder
 under build/font-converter-check, with --version and --out, which are not remembered.
 """
 import argparse
 import ctypes
-import ctypes.wintypes as wt
 import os
 import shutil
 import stat
@@ -34,9 +39,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONVERTER = ROOT / "font-converter"
-EXE = CONVERTER / "dist" / "KMRP Font Converter.exe"
+WINDOWS = sys.platform == "win32"
+EXE = CONVERTER / "dist" / "KMRP Font Converter.exe" if WINDOWS else CONVERTER / "build" / "target" / "release" / "kmrp-font-converter"
 WORK = ROOT / "build" / "font-converter-check"
 FONTS = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
+# A TrueType font with every letter the game uses, for the inputs made here: Arial where it is,
+# else KMRP's own Menu font, which the converter carries for its window.
+SOURCE = FONTS / "arial.ttf" if (FONTS / "arial.ttf").exists() else CONVERTER / "fonts" / "KMRP-OriginalHD-Menu.ttf"
 sys.path.insert(0, str(ROOT / "tools"))
 from kmrp_checkout import kmrp_root  # noqa: E402
 # The game's own font atlases a KMRP build copies: compared against when a KMRP checkout is
@@ -161,7 +170,7 @@ def inputs():
         out = folder / f"arial.{flavor}"
         if not out.exists():
             try:
-                f = TTFont(FONTS / "arial.ttf")
+                f = TTFont(SOURCE)
                 f.flavor = flavor
                 f.save(out)
             except Exception as e:      # WOFF2 needs the brotli module
@@ -171,7 +180,7 @@ def inputs():
     digits = folder / "digits-only.ttf"
     if not digits.exists():
         options = subset.Options()
-        font = subset.load_font(str(FONTS / "arial.ttf"), options)
+        font = subset.load_font(str(SOURCE), options)
         s = subset.Subsetter(options)
         s.populate(text="0123456789")
         s.subset(font)
@@ -190,6 +199,7 @@ def inputs():
 
 def close_while_converting(spec):
     """WM_CLOSE to the window while it converts: it must stop, write nothing and exit."""
+    import ctypes.wintypes as wt
     user32 = ctypes.WinDLL("user32")
     folder = WORK / "close"
     if folder.exists():
@@ -202,7 +212,13 @@ def close_while_converting(spec):
     def enum(hwnd, _):
         pid = wt.DWORD()
         user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-        if pid.value == p.pid and user32.IsWindowVisible(hwnd):
+        # The window by its title, shown or not: winit keeps a second, visible window of its
+        # own ("Winit Thread Event Target"), which WM_CLOSE does nothing to, and eframe shows
+        # the program's window only after its first frame, in which the conversion starts
+        # (2026-11-09: the visible-window test of the C# program's check found none).
+        title = ctypes.create_unicode_buffer(256)
+        user32.GetWindowTextW(hwnd, title, 256)
+        if pid.value == p.pid and title.value == "KMRP Font Converter":
             found.append(hwnd)
         return True
     deadline = time.time() + 30
@@ -228,13 +244,18 @@ def main():
     parser.add_argument("--no-build", action="store_true")
     args = parser.parse_args()
     if not args.no_build:
-        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(CONVERTER / "build.ps1")], check=True)
+        if WINDOWS:
+            subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(CONVERTER / "build.ps1"), "-NoTests"], check=True)
+        else:
+            subprocess.run(["cargo", "build", "--release", "--locked"], cwd=CONVERTER, check=True)
     WORK.mkdir(parents=True, exist_ok=True)
     refs = references()
     made = inputs()
     good = [
         ("arial", str(FONTS / "arial.ttf")),
         ("kmrp-otf-cff", str(ROOT / "fonts" / "otf" / "KMRP-OriginalHD-Dialogue.otf")),
+        ("kmrp-ttc", str(ROOT / "fonts" / "KMRP-OriginalHD.ttc")),
+        ("kmrp-ttf", str(CONVERTER / "fonts" / "KMRP-OriginalHD-Descriptions.ttf")),
         ("cambria-ttc", str(FONTS / "cambria.ttc") + "#Cambria"),
         ("bahnschrift-variable", str(FONTS / "bahnschrift.ttf")),
         ("georgia", str(FONTS / "georgia.ttf")),
@@ -268,7 +289,7 @@ def main():
     folder.mkdir(parents=True)
     (folder / "fnt_d16x16.tpc").write_bytes(b"new mod")
     (folder / "fnt_d16x16.tpc.before-font-converter").write_bytes(b"earlier mod")
-    code = subprocess.run([str(EXE), "--convert", "--exit", f"--out={folder}", "--version=kmrp", f"dialogue={FONTS / 'arial.ttf'}"], timeout=90).returncode
+    code = subprocess.run([str(EXE), "--convert", "--exit", f"--out={folder}", "--version=kmrp", f"dialogue={SOURCE}"], timeout=90).returncode
     if check(code == 0, f"tpc: exit {code}") and \
        check((folder / "fnt_d16x16.tpc.before-font-converter").read_bytes() == b"earlier mod", "tpc: the earlier copy was changed") and \
        check((folder / "fnt_d16x16.tpc.before-font-converter-2").read_bytes() == b"new mod", "tpc: the new one was not set aside as -2") and \
@@ -285,7 +306,7 @@ def main():
     os.chmod(old, stat.S_IREAD)
     (folder / "dialogfont16x16.tpc").write_bytes(b"keep")
     code = subprocess.run([str(EXE), "--convert", "--exit", f"--out={folder}", "--version=kmrp",
-                           f"menu={FONTS / 'arial.ttf'}", f"dialogue={FONTS / 'arial.ttf'}"], timeout=90).returncode
+                           f"menu={SOURCE}", f"dialogue={SOURCE}"], timeout=90).returncode
     names = sorted(p.name for p in folder.iterdir())
     if check(code == 1, f"read-only: exit {code}") and \
        check(names == ["dialogfont16x16.tpc", "fnt_d16x16.txi"], f"read-only: the folder changed: {names}"):
@@ -293,9 +314,12 @@ def main():
     os.chmod(old, stat.S_IWRITE)
     shutil.rmtree(folder, ignore_errors=True)
 
-    close_while_converting(str(FONTS / "arial.ttf"))
-    if not any(f.startswith("close") for f in failures):
-        print("ok    closed while converting: stopped, nothing written")
+    if WINDOWS:
+        close_while_converting(str(SOURCE))
+        if not any(f.startswith("close") for f in failures):
+            print("ok    closed while converting: stopped, nothing written")
+    else:
+        print("skip  closed while converting: the check sends WM_CLOSE, Windows only")
 
     print()
     if failures:

@@ -13,15 +13,26 @@ KMRP:           https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patc
 What you need
 -------------
 
-- Windows 8 or newer (Windows 7 needs .NET Framework 4 installed). Under Linux it is
-  meant to run with Proton or Wine; that has not been tried yet.
-- KOTOR 1. For the KMRP version, KMRP 1.6.0 or later.
+- One of:
+    Windows 10 or 11, 64-bit       KMRP-Font-Converter-<version>-Windows-x64.zip
+    macOS 11 or newer, Apple       KMRP-Font-Converter-<version>-macOS.dmg (or .zip): one
+      silicon or Intel             app for both
+    Linux, 64-bit Intel or AMD     KMRP-Font-Converter-<version>-Linux-x86_64.AppImage
+    Linux, 64-bit ARM              KMRP-Font-Converter-<version>-Linux-aarch64.AppImage
+  A graphics driver with OpenGL 2 or newer, as every desktop has.
+- KOTOR 1. For the KMRP version, KMRP 1.6.0 or later. On macOS and Linux the game is the
+  Windows game run through Steam's Proton, CrossOver or Wine: the fonts are for its Override
+  folder. (KMRP is for the Windows game.)
 
 
 How to use it
 -------------
 
-1. Start "KMRP Font Converter.exe". Nothing is installed.
+1. Start it. Nothing is installed.
+     Windows  "KMRP Font Converter.exe"
+     macOS    open the DMG and drag "KMRP Font Converter" to Applications, then open it.
+              It is not notarized by Apple: the first time, right-click it and choose Open.
+     Linux    make the AppImage executable (chmod +x, or the file's Properties) and run it.
 2. On a tile, click "Choose a font..." and pick a font file (TTF, OTF, TTC, OTC,
    WOFF or WOFF2), or drag the file onto the tile. Each tile is one kind of text in
    the game; you do not have to change them all.
@@ -42,10 +53,10 @@ How to use it
 Where the fonts go
 ------------------
 
-Into the game's Override folder when the converter finds the game (Steam, GOG, or the
-converter put in the game's folder); "Change" picks another folder. When no game is
-found they go to Documents\KMRP Font Converter: copy them into the game's Override
-folder yourself.
+Into the game's Override folder when the converter finds the game (Steam on any system,
+GOG on Windows, or the converter put in the game's folder); "Change" picks another folder.
+When no game is found they go to Documents/KMRP Font Converter: copy them into the game's
+Override folder yourself.
 
 Fonts already in the folder under the same names are replaced (you are asked first).
 A .tpc file of the same name is not deleted: it is renamed to end in
@@ -69,8 +80,15 @@ If any file ends in .tpc.before-font-converter, remove that ending to put it bac
 Settings
 --------
 
-The text size, light or dark, the folder and the version are kept in
-%APPDATA%\KMRP Font Converter\settings.txt. Delete it to start afresh.
+The text size, light or dark, the folder and the version are kept in settings.txt in a
+folder "KMRP Font Converter" in the system's settings folder:
+  Windows  %APPDATA%\KMRP Font Converter\settings.txt
+  macOS    ~/Library/Application Support/KMRP Font Converter/settings.txt
+  Linux    ~/.config/KMRP Font Converter/settings.txt
+Delete it to start afresh.
+
+The window fits itself to the screen: on a smaller screen it opens smaller, and everything
+in it shrinks evenly with it, down to half its full size.
 
 
 Licence

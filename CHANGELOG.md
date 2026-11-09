@@ -19,17 +19,45 @@ Nothing has been released from this repository yet: no tag, no GitHub release
 ### KMRP Font Converter 1.0.0
 
 To be released on the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
-maintainer, 2026-11-08). The exe is 840,192 bytes, SHA-256
-`81D4BD89357D8377A893559BC8FF94D301C8307C71480FA4A08508C00E6F5722`, built deterministically
-from this repository; how it was checked is in
-[font-converter.md](font-converter/docs/font-converter.md) section 6.
+maintainer, 2026-11-08). The Windows exe is 6,495,744 bytes, SHA-256
+`F64D66A255791E56FC8C10811A41EA9BDB1E6B847D3D83DE54A5F36968AE9071`, built deterministically
+from this repository; it and the other packages, and how they were checked, are in
+[font-converter.md](font-converter/docs/font-converter.md) sections 6 and 7.
+
+**Changed, 2026-11-09: rewritten in Rust, for Windows, macOS and Linux**
+
+- One Rust program instead of the C# one (.NET Framework 4, Windows only): a Windows x64
+  exe and zip, a macOS app for Apple silicon and Intel (Universal 2, DMG and zip), and
+  Linux AppImages for x86_64 and aarch64. `build.ps1`, `build-macos.sh` and
+  `build-linux.sh` make them, after KMSE's scripts; `.github/workflows/build.yml` runs the
+  tests on all three systems and makes the packages on demand.
+- Fonts read by the program itself (skrifa; wuff for WOFF2) instead of Windows'
+  DirectWrite. The KMRP version's TXI files are the C# program's byte for byte for Georgia
+  and KMRP's Dialogue OTF; Arial's differ in one cell of three files (K, 50 pixels wide
+  against 51).
+- The original game's letters hinted by the font's own instructions (FreeType's normal
+  target) instead of Windows' GDI-classic drawing: the same heights and baselines, letters
+  a little narrower. Measured in font-converter.md section 9; **not yet seen in the game**.
+- The window fits itself to the screen as KMSE does (the maintainer: "make it dynamic (like
+  kmse smaller on smaller screens)"): it opens as large as the screen allows, shrinks evenly
+  down to half the canvas, and follows a move to another screen. The 16:9 edge drag of the
+  Windows window is gone.
+- A font missing some of the game's letters shows a badge with the warning sign and how
+  many, beside the cross; pointing at it lists the letters (the maintainer: the warning
+  "isn't really shown fully"). Until then "N missing" cut the font's name short.
+- `--convert --exit` opens no window.
+- The tests run on macOS and Linux too, with KMRP's own fonts as inputs where Windows' are
+  missing; their close-while-converting check finds the window by its title.
+- **Not yet run:** the macOS app (type-checked for both architectures, not built), the Linux
+  window, the aarch64 AppImage. The x86_64 AppImage converted fonts under WSL's Ubuntu 20.04.
 
 **Added**
 
 - Two versions, in a Version box between Clear and Convert: **KMRP** (KMRP's HD size, for
   KMRP 1.6.0 or later, which offers the fonts as Modded Font) and **Original Game** (the
-  game's own sizes, the HD sizes divided by six, with Windows' hinted drawing). Seen
-  working in an unmodified GOG 1.03 game at 1280x960 with Georgia.
+  game's own sizes, the HD sizes divided by six, with Windows' hinted drawing; the font's
+  own hinting since the Rust rewrite). Seen working in an unmodified GOG 1.03 game at
+  1280x960 with Georgia, made by the C# program.
 - The logo reads KOTOR when Original Game is chosen.
 - All-or-nothing conversion: every font made in a work folder and moved into place only
   when all are made; a `.tpc` set aside earlier is kept and the next named `-2`, `-3`.
@@ -43,7 +71,8 @@ from this repository; how it was checked is in
 - No pop-up at the start and no Deadly Stream or GitHub buttons; Done is the Convert
   button turning green ("Converted").
 - The window's text at KMSE's sizes and drawn at the screen's own pixels.
-- The window split from one 1,848-line file into nine by job.
+- The window split from one 1,848-line file into nine by job (C#; since the Rust rewrite,
+  eight Rust files by the same jobs).
 - The bottom row 86 pixels high instead of 68, and "Version" larger (2026-11-09); until then
   1.0.0's exe was `30643C4A...`.
 - The release zip holds its five files at its root, without a folder (2026-11-09).
@@ -51,7 +80,9 @@ from this repository; how it was checked is in
   icon (2026-11-09); the exe is 272,896 bytes smaller for it. Until then 1.0.0's exe was
   `89B63293...`.
 
-**Not yet:** run under Proton or Wine; signed; scanned on VirusTotal. In the game, not yet
+**Not yet:** signed (the macOS app is signed ad hoc); scanned on VirusTotal. (Until the
+Rust rewrite this also said "run under Proton or Wine": the C# program was never tried
+there, and the Rust one runs natively instead.) In the game, not yet
 looked at: the HUD's numbers, the end credits and Menu Large.
 
 ### KMRP Original HD fonts 1.600

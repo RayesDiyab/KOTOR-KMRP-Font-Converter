@@ -1,0 +1,12 @@
+# Build output stays in this folder's ignored build folder, not beside the sources (as KMSE).
+[build]
+target-dir = "build/target"
+
+# The linker's time stamp in the program's header becomes a hash of its contents (/Brepro),
+# so two builds of the same sources are byte for byte the same, as the C# program's
+# /deterministic build was (audit R2).
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=/Brepro"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=/Brepro"]

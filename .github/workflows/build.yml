@@ -1,0 +1,115 @@
+# The KMRP Font Converter on Windows, macOS and Linux.
+#
+# test: on every push to master and every pull request, the unit tests and the regression
+# test (tests/Test-FontConverter.py: every font type into both versions, and what it must
+# refuse) on each system, and every relative link in the documents.
+#
+# packages: run by hand (Actions, "Run workflow") or by a tag v*, the release packages, as the
+# build scripts make them on a maintainer's machine:
+#   Windows   font-converter/build.ps1 -Release     KMRP-Font-Converter-<v>-Windows-x64.zip
+#   macOS     font-converter/build-macos.sh          KMRP-Font-Converter-<v>-macOS.dmg and .zip
+#                                                    (Universal 2: Apple silicon and Intel; ad hoc
+#                                                    signed, not notarized)
+#   Linux     font-converter/build-linux.sh          KMRP-Font-Converter-<v>-Linux-x86_64.AppImage
+#                                                    KMRP-Font-Converter-<v>-Linux-aarch64.AppImage
+# Each is kept as the run's artifact. Nothing is published or released by this workflow.
+name: Font Converter
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test ${{ matrix.os }}
+    if: github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: font-converter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install fonttools brotli pillow
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: font-converter -> build/target
+      - name: Unit tests
+        run: cargo test --profile tests
+      - name: Release build (Windows)
+        if: runner.os == 'Windows'
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File build.ps1 -NoTests
+      - name: Release build
+        if: runner.os != 'Windows'
+        run: cargo build --release --locked
+      - name: Regression test
+        run: python ../tests/Test-FontConverter.py --no-build
+
+  links:
+    name: Documentation links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python .github/scripts/check_links.py
+
+  windows:
+    name: package Windows x64
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: powershell -NoProfile -ExecutionPolicy Bypass -File font-converter/build.ps1 -Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KMRP-Font-Converter-Windows-x64
+          path: font-converter/dist/KMRP-Font-Converter-*-Windows-x64.zip
+
+  macos:
+    name: package macOS (Universal 2)
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - run: sh font-converter/build-macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KMRP-Font-Converter-macOS
+          path: |
+            font-converter/dist/KMRP-Font-Converter-*-macOS.dmg
+            font-converter/dist/KMRP-Font-Converter-*-macOS.zip
+
+  linux:
+    name: package Linux ${{ matrix.arch }}
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-22.04
+          - arch: aarch64
+            runner: ubuntu-22.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh font-converter/build-linux.sh --arch ${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KMRP-Font-Converter-Linux-${{ matrix.arch }}
+          path: font-converter/dist/KMRP-Font-Converter-*-Linux-${{ matrix.arch }}.AppImage

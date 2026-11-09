@@ -28,22 +28,34 @@ two lines and the reply list (the highlighted reply in the game's yellow) all dr
 Georgia, at the game's own size and place, against a run of the same copy without it. Not
 looked at there: the HUD's numbers, the end credits, Menu Large.
 
+**Rewritten in Rust on 2026-11-09** (the maintainer: "rewrite in rust, create windows, macos
+and linux (intel and silicon) appimage version"). One source now builds the Windows exe, a
+macOS app for Apple silicon and Intel, and Linux AppImages for x86_64 and aarch64. Fonts are
+read and the original game's letters hinted by the program itself instead of Windows'
+DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,495,744
+bytes, SHA-256 `F64D66A255791E56FC8C10811A41EA9BDB1E6B847D3D83DE54A5F36968AE9071`. What
+changed in what it writes is measured in section 9. **Not yet seen in the game:** any font
+the Rust program wrote; the game sightings above are of the C# program's fonts. **Not yet
+run:** the macOS app (no Mac here), the Linux window and the aarch64 AppImage.
+
 ## 1. Files
 
 Split by job on 2026-11-08 (audit: the window was one 1,848-line file).
 
 | File | What it is |
 | --- | --- |
-| `Program.cs` | The start, the one version number (`Program.Version`, which the footer, the file's properties and `build.ps1 -Release` read), embedded files |
-| `MainForm.cs` | The window: header, tiles, the bottom row with the Version box, input, what the tiles do, starting a conversion |
-| `Dialogs.cs` | The pop-ups drawn in the window: a message, Replace, Settings, the face picker |
-| `Theme.cs` | Colours, fonts, and text drawn at the device's own pixels (section 3) |
-| `Tiles.cs` | The eleven tiles and their example lines |
-| `Places.cs` | `settings.txt`; finding the game, its Override folder and whether KMRP is installed |
-| `Conversion.cs` | Writing a set of fonts into a folder, all or nothing (section 2) |
-| `Atlas.cs` | Glyph rasteriser, the atlas and TXI writer, for both versions |
-| `FontSource.cs` | Reading font files through DirectWrite, by vtable; WOFF read here; Windows' own hinted drawing of small letters |
-| `build.ps1` | Builds `dist\KMRP Font Converter.exe` from this folder alone; `-Refresh` remakes `data/`; `-Release` the release zip (section 6) |
+| `Cargo.toml`, `Cargo.lock` | The Rust program: its one version number (`version`, which the footer, the exe's properties, the macOS app's and every package's name read), its crates, pinned |
+| `src/main.rs` | The start, the command line, `--convert --exit` without a window, embedded files |
+| `src/app.rs` | The window: header, tiles, the bottom row with the Version box, the pop-ups (a message, Replace, Settings, the face picker, the missing-letters pop-up), input, fitting the window to the screen, starting a conversion |
+| `src/theme.rs` | Colours and the window's fonts |
+| `src/tiles.rs` | The eleven tiles and their example lines |
+| `src/places.rs` | `settings.txt`; finding the game, its Override folder and whether KMRP is installed |
+| `src/conversion.rs` | Writing a set of fonts into a folder, all or nothing (section 2) |
+| `src/atlas.rs` | Glyph rasteriser, the atlas and TXI writer, for both versions; its unit tests |
+| `src/font.rs` | Reading font files (skrifa), WOFF read here, WOFF2 through wuff; the hinted letters of the original game's version |
+| `build.rs`, `.cargo/config.toml` | Lists the example pictures for the program; puts the icon and version in the Windows exe; build output in `build/`, `/Brepro` for a deterministic exe |
+| `build.ps1`, `build-macos.sh`, `build-linux.sh` | The Windows exe and zip, the macOS app, DMG and zip, the Linux AppImages (section 6) |
+| `icon.png` | The macOS and Linux icon, 512x512, made by `make_icon.py` with `favicon.ico` |
 | `kmrp-logo.png`, `kotor-logo.png` | The logo, `tools/build_brand_image.py --text KMRP --tracking 0.12 --whole-crest`, 714x535 made 400x300; the same with `--text KOTOR`, at the same scale, 486x302 (2026-11-08). The KMRP one remade this way is pixel for pixel the committed file |
 | `font-logo.png` | The repository README's logo, not built into the program: the same tool with `--text FONT`, at full size, 677x539 (2026-11-09) |
 | `release/make_press_kit.py`, `release/press-kit/` | The press kit's five pages, in the converter's own style, from screenshots kept out of the repository (its README says where each came from) |
@@ -85,13 +97,14 @@ original KOTOR and one for KMRP"), chosen in the Version box beside Convert:
 | | KMRP | Original Game |
 | --- | --- | --- |
 | Size | The Original HD Font's: its TXI header (fontheight, baselineheight, spacing, numchars) unchanged, six times the original fonts | The original fonts': fontheight, baselineheight, spacingR and spacingB divided by six. Each divides exactly (10, 12, 14, 16, 19 and 32 pixels), and `Test-FontConverter.py` finds them equal to the game's own TXI values |
-| Letters | Drawn here from the outlines, exact-area coverage | Drawn by Windows with the font's own hinting (`LoadedFace.Hinted`: DirectWrite's GDI-classic rendering, greyscale through `IDWriteFactory2::CreateGlyphRunAnalysis`, slot 30), each letter standing on a whole pixel, so text of 10 to 19 pixels is crisp. Where that is missing, ClearType samples averaged (`IDWriteFactory`, slot 23); where neither works, the outlines unhinted, every letter alike |
+| Letters | Drawn here from the outlines, exact-area coverage | Hinted by the font's own instructions (`LoadedFace::hinter` in `src/font.rs`: skrifa's TrueType and PostScript hinting, its automatic hinter for a TrueType font with none, FreeType's normal target), then filled by the converter's own rasteriser, each letter standing on a whole pixel, so text of 10 to 19 pixels is crisp. Where a font's hints cannot be run, the outlines unhinted, every letter alike. Until 2026-11-09 drawn by Windows (DirectWrite's GDI-classic greyscale); section 9 measures the difference |
 | Atlas | Starts at the HD atlas's width, doubles until the letters fit | Starts at 64, doubles: a power of two like the game's own |
 | In the game | KMRP fits each to its drawn size and offers them as **Modded Font** ([ingame-text-options.md](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/ingame-text-options.md) section 3) | The game draws them one texel to one pixel, as its own: the same size as the game's text, which is small on a modern screen |
 
 *Corrected 2026-11-08, the same day:* the first original-game build took ClearType's
 texture; its filter pads each glyph a pixel each side, and at 10 pixels Georgia's m stood
-apart ("Com bat"). Greyscale has no padding.
+apart ("Com bat"). Greyscale has no padding. (The C# program; the Rust program has no
+ClearType path.)
 
 The rules are `tools/build_font_from_ttf.py`'s, measured from the game's atlases:
 Windows-1252 slots, no zero-wide glyph (a slot the font lacks keeps the HD Original glyph's
@@ -140,7 +153,8 @@ title moves right by its extra width (33 pixels).
 
 **The bottom row, taller** (2026-11-09, the maintainer from a screenshot: "the version
 looks cramped increase the height of the bottom buttons", then "make Version grösser").
-On the 1600x900 canvas (`ActionsY`, `ActionsH`, `PaintVersion` in `MainForm.cs`):
+On the 1600x900 canvas (`ActionsY`, `ActionsH`, `PaintVersion` in `MainForm.cs` then;
+`paint_actions` and `paint_version` in `src/app.rs` since the Rust rewrite, the same numbers):
 
 | | Until 2026-11-09 | Since |
 | --- | --- | --- |
@@ -169,34 +183,70 @@ Measured beside KMSE at 1616x939: its ordinary text was 14.4 pixels against KMSE
 
 Checked by screenshots at 1600x900: Medium dark with nothing picked and with three fonts
 (Original Game, KOTOR logo), Large dark after converting (the green button), Small light.
-At Small the introduction's second line holds one word.
+At Small the introduction's second line holds one word. Since 2026-11-09 egui draws the
+text, laid out at its size on the screen and each line put on a whole pixel (`App::draw`,
+`draw_at`, `draw_wrapped` in `src/app.rs`); the sizes in the table are unchanged. Checked by
+screenshots at 1600x900 (Medium dark with four fonts, Large light with the picker open,
+the green Converted button) and 1200x675 (Small, Settings open), each beside the press
+kit's capture of the C# window.
 
-**Window size.** Everything is laid out on a 1600x900 canvas scaled evenly to the window.
-Dragging an edge keeps the inside 16:9 (`WM_SIZING`), so the canvas always fills it;
-maximized on a screen of another shape it is centred and the header's glow reaches the
-window's edges. The window opens at the screen's scale as large as fits 94% of the work
-area's width and 92% of its height; the smallest is three quarters of the canvas at the
-screen's scale (1200x675 at 100%). Each image is kept at one size and made again when the
-size changes, stretched while an edge is dragged and sharp again when it is let go.
-Measured on 2026-10-21 by sending the window `WM_SIZING`: every edge and corner gave a 16:9
-inside (1484x835, 2064x1161, 1984x1116, 1384x778), and `--size=1000x560` opened at the
-minimum, 1200x675.
+**Window size: fitted to the screen, as KMSE** (2026-11-09, the maintainer: "make it
+dynamic (like kmse smaller on smaller screens)"). Everything is laid out on a 1600x900
+canvas scaled evenly to the window, text, pictures and spacing together; a window of another
+shape centres the canvas, and the header's glow reaches the window's edges. The window opens
+at 1600x900 at the screen's scale where that fits 94% of the screen's width and 88% of its
+height, else as large as does (`App::fit_window` in `src/app.rs`); it can be made as small
+as half the canvas (800x450 at 100%), KMSE's floor (its `fit_to_window`), never with a
+smallest size larger than the screen. Moved to another screen, or the screen's scale
+changed, the smallest size follows and a window larger than the new screen is made to fit it
+(`App::follow_monitor`). Pictures are made again at the screen's own pixels whenever the
+size changes. Checked by screenshots on 2026-11-09: `--size=1600x900` and `--size=1200x675`
+lay out as the C# program's window. **Not checked:** the opening size on a small screen,
+and moving the window between screens.
+
+*Superseded 2026-11-09:* the C# window kept its inside 16:9 while an edge was dragged
+(`WM_SIZING`, Windows only), opened at 94% of the work area's width and 92% of its height,
+and was never smaller than three quarters of the canvas (1200x675 at 100%); measured on
+2026-10-21: every edge and corner gave a 16:9 inside (1484x835, 2064x1161, 1984x1116,
+1384x778). The Rust window has no 16:9 drag (winit offers none on every system); the canvas
+is centred instead.
+
+**Missing letters: a badge and a pop-up** (2026-11-09, the maintainer: the warning "isn't
+really shown fully"; "number glyphs missing, and if you hover over it ... a pop-up with more
+info"). A picked font that lacks letters of the game's text (they are left blank in the
+game) shows a badge at its chip's right, beside the cross: a warning sign drawn as a
+triangle, and how many. Pointing at it opens a pop-up: "8 letters missing", the letters
+themselves, and that the game's text leaves them blank. Until then "N missing" followed the
+font's name and cut it short: with Arial lacking 8 letters, the Dialogue tile showed "A...".
+Checked by a screenshot at 1600x900 with the cursor on the badge: Arial with 8 of its
+letters taken out by a fontTools subset (the Windows-1252 bytes 0x80, 0x8A, 0x8C, 0x8E,
+0x9A, 0x9C, 0x9E, 0x9F), its name shown in full and the pop-up listing the 8.
 
 **Settings** (2026-10-22). The gear at the header's top right opens a pop-up with Text Size
-and Appearance (Dark, Light). Both apply at once and are kept in `%APPDATA%\KMRP Font
-Converter\settings.txt` (`textsize=`, `theme=`, with `output=` and `version=`). Light mode
+and Appearance (Dark, Light). Both apply at once and are kept in `settings.txt` in the
+system's settings folder (`textsize=`, `theme=`, with `output=` and `version=`):
+`%APPDATA%\KMRP Font Converter` on Windows, as before, `~/Library/Application Support/KMRP
+Font Converter` on macOS and `~/.config/KMRP Font Converter` on Linux. Light mode
 uses the Save Editor's light colours; the example boxes keep their dark backing in both,
 because they show the game's own coloured text. Every edge was raised to at least 1.8:1
 against the fill it sits on (WCAG contrast, measured 2026-10-22).
 
-**Font files.** DirectWrite reads TrueType and OpenType (both outline kinds) and
-collections; WOFF2 is unpacked by `IDWriteFactory5::UnpackFontFile` (Windows 10 1703 and
-later), a variable font's named instances come from its `fvar` table and are made with
-`IDWriteFactory6::CreateFontResource` (Windows 10 1809 and later). WOFF 1.0 is inflated by
-the converter itself into `%TEMP%\KMRP Font Converter`, emptied when the program starts and
-ends (until 2026-11-08 every one stayed). Other types (Type 1, `.fon`, `.dfont`, `.eot`,
-SVG fonts) are refused: "This font type can't be used".
+**Font files** (since 2026-11-09, `src/font.rs`). skrifa, the fontations project's reader
+and scaler, reads TrueType and OpenType (both outline kinds, CFF and CFF2), collections
+(`.ttc`, `.otc`) and variable fonts, one face per named instance (its `fvar` table, as
+before); WOFF2 is unpacked in memory by wuff; WOFF 1.0 by the converter's own code, the C#
+program's ported with its limits. Nothing is written to a temporary folder any more. The
+metrics are DirectWrite's: the em, and the ascent and descent from OS/2's `usWinAscent` and
+`usWinDescent`, or its typo values where the font sets `USE_TYPO_METRICS`, else `hhea`'s.
+A face's name is chosen from its `name` table as before (Windows US English first). A font
+of bitmaps only has no outlines to draw and is refused, as DirectWrite's was. Other types
+(Type 1, `.fon`, `.dfont`, `.eot`, SVG fonts) are refused: "This font type can't be used".
 
+*Superseded 2026-11-09:* until then Windows' DirectWrite read every file: TrueType,
+OpenType and collections through `IDWriteFactory`; WOFF2 through
+`IDWriteFactory5::UnpackFontFile` (Windows 10 1703 and later); named instances through
+`IDWriteFactory6::CreateFontResource` (Windows 10 1809 and later); WOFF 1.0 inflated by the
+converter into `%TEMP%\KMRP Font Converter`, emptied when the program started and ended.
 Slot numbers, counted from the 10.0.26100.0 SDK headers and checked again by the audit:
 `IDWriteFactory` 3 to 23 (`CreateFontFileReference` 7, `CreateFontFace` 9,
 `CreateGlyphRunAnalysis` 23); `IDWriteFactory2::CreateGlyphRunAnalysis` 30;
@@ -205,10 +255,23 @@ Slot numbers, counted from the 10.0.26100.0 SDK headers and checked again by the
 `IDWriteFontResource::CreateFontFace` 13; `IDWriteGlyphRunAnalysis::GetAlphaTextureBounds`
 3, `CreateAlphaTexture` 4.
 
-**Linux with Proton (untested).** The program is meant to run under Wine/Proton: .NET
-Framework comes from wine-mono, DirectWrite from Wine's `dwrite.dll`. Where Bahnschrift,
-Segoe UI or Consolas are missing it falls back to Tahoma, Arial or the system sans; the dark
-title bar is skipped where DWM is missing.
+**macOS and Linux** (2026-11-09). The window is egui's (eframe, OpenGL through glow), the
+same on every system; its text is set in the two KMRP fonts, with egui's own fonts for the
+signs they lack and for the folder's path (Hack). The file pickers are the system's own (rfd:
+Windows' dialogs, macOS's panels, and on Linux the desktop's portal). The tick, the clear
+cross and the warning sign are drawn as strokes, as no font the window carries has them
+(seen 2026-11-09: the cross and the warning sign came out as empty boxes when drawn as
+letters). On Linux the AppImage opens OpenGL (or EGL), X11 or Wayland and xkbcommon from the
+system. Under WSL's Ubuntu 20.04 (2026-11-09), which has neither xkbcommon nor Mesa, the
+window did not open: without xkbcommon the program stopped in winit (`XKBNotFound`); with
+xkbcommon unpacked beside it, it said "The window could not be opened" (no OpenGL
+configuration). `--convert --exit` converted there. So the Linux window is **not yet seen**. Where the game is found on macOS and Linux: Steam's library
+folders (`~/Library/Application Support/Steam`; `~/.steam/steam`, `~/.local/share/Steam`
+and Flatpak's), where Proton keeps the Windows game with its `swkotor.exe`; and the
+folder beside the AppImage or the macOS app.
+
+*Superseded 2026-11-09:* the C# program was meant to run under Wine or Proton (never tried),
+with .NET Framework from wine-mono and DirectWrite from Wine's `dwrite.dll`.
 
 ## 4. KMRP and the original game
 
@@ -235,27 +298,63 @@ For screenshots, checks and the regression test; none of these is remembered:
 
 | Argument | What it does |
 | --- | --- |
-| `key=path[#face name]` | A tile's font (keys as in `Tiles.All`), as if chosen: the same checks and messages |
+| `key=path[#face name]` | A tile's font (keys as in `src/tiles.rs`), as if chosen: the same checks and messages |
 | `"--pick key=path"` | The same through the file's own path, opening the picker for a collection (one argument, quoted) |
 | `--out=folder` | Write there |
 | `--version=kmrp`, `--version=original` | Make the fonts for that version |
 | `--textsize=small|medium|large`, `--theme=dark|light` | The look |
 | `--convert` | Convert when the window shows; no Replace question with `--exit` |
-| `--exit` | With `--convert`: close when done; exit code 0, or 1 when nothing was converted or it failed |
-| `--size=WxH` | The window's inside at that size (ignored when it is not two numbers) |
+| `--exit` | With `--convert`: no window at all (since 2026-11-09; the C# program opened it and closed it when done); the messages go to the standard error; exit code 0, or 1 when nothing was converted or it failed |
+| `--size=WxH` | The window's inside at that size, in the screen's pixels (ignored when it is not two numbers) |
 | `--still` | Ignore the mouse (screenshots) |
 | `--settings` | Open Settings |
 
 ## 6. Building and the release
 
-`powershell -ExecutionPolicy Bypass -File font-converter\build.ps1 -Release` builds the exe
-and `dist\KMRP-Font-Converter-<version>.zip` holding it, `README.txt`, `LICENSE.txt` (this
-repository's GPL-3.0), `OFL.txt` and `THIRD-PARTY-NOTICES.txt` (audit B3), at the zip's root
-with no folder (since 2026-11-09, the maintainer: "put everything in the root"; before, they
-were in `KMRP Font Converter <version>\`). The compiler is Roslyn's
-`csc` from Visual Studio or its Build Tools (found with `vswhere`) with `/deterministic`, so
-a rebuild gives the same exe (audit R2; checked 2026-11-08: two builds, one SHA-256), else
-the .NET Framework's, which warns that the hash will differ.
+Since 2026-11-09 three scripts in `font-converter/`, each running the unit tests first
+(`cargo test --profile tests`, in its own `build/target-tests`), building with `--locked`,
+and checking what it made. Every package holds the program, `README.txt`, `LICENSE.txt`
+(this repository's GPL-3.0), `OFL.txt` and `THIRD-PARTY-NOTICES.txt` (audit B3). The macOS
+and Linux scripts follow KMSE's own.
+
+| Script | Where it runs | Makes, in `dist/` | Its checks |
+| --- | --- | --- | --- |
+| `build.ps1 [-Release]` | Windows, Rust with the MSVC toolchain | `KMRP Font Converter.exe`; `KMRP-Font-Converter-<v>-Windows-x64.zip`, the files at its root | the exe's SHA-256 printed |
+| `build-macos.sh [--arm64-only]` | macOS, Xcode's command line tools | `KMRP Font Converter.app` (Universal 2: `lipo` of the aarch64 and x86_64 builds, macOS 11 or later, ad hoc signed unless `KMRP_SIGN_IDENTITY`, notarized with `KMRP_NOTARY_PROFILE`); `KMRP-Font-Converter-<v>-macOS.dmg` (with a link to Applications) and `.zip` | both architectures in the app, only the system's libraries loaded, no path of the Mac in it, a headless conversion for both versions |
+| `build-linux.sh [--arch x86_64\|aarch64] [--zig] [--pack-only]` | Linux or WSL | `KMRP-Font-Converter-<v>-Linux-<arch>.AppImage`, packed by appimagetool 1.9.1 (its SHA-256 checked against GitHub's: `ed4ce84f...` x86_64, `f0837e74...` aarch64) | only glibc and libgcc linked, the glibc it needs, no home path, a headless conversion for both versions where the architecture is the machine's |
+
+The Windows exe is deterministic: the linker writes no time stamp (`/Brepro`,
+`.cargo/config.toml`) and the sources' folders become fixed names
+(`--remap-path-prefix`), so the same sources give the same bytes (audit R2; checked
+2026-11-09: a rebuild after `cargo clean -p kmrp-font-converter` gave the same SHA-256).
+`.github/workflows/build.yml` runs the unit and regression tests on Windows, macOS and
+Ubuntu 22.04 on every push to master, and, run by hand or by a `v*` tag, the four packages:
+Windows x64, macOS Universal 2, and the AppImages on Ubuntu 22.04 for x86_64 and on its ARM
+runner for aarch64. **Not yet run:** the workflow (nothing has been pushed).
+
+The packages made on 2026-11-09 on the maintainer's Windows PC. The Linux programs were
+built there with `cargo zigbuild` for glibc 2.31 (as `build-linux.sh --zig` does, with the
+same path mapping) and packed with `build-linux.sh --pack-only` under WSL's Ubuntu 20.04;
+appimagetool's AppImage runtime for aarch64 was put in `build/tools` from the type2-runtime
+release's `continuous` tag (SHA-256 `9a72a744...`, GitHub's digest), as GitHub answered 504
+to the download from WSL. The macOS app was not made: that needs a Mac.
+
+| Package (1.0.0, Rust) | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `KMRP Font Converter.exe` | 6,495,744 | `F64D66A255791E56FC8C10811A41EA9BDB1E6B847D3D83DE54A5F36968AE9071` |
+| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,607,636 | `909387ED5C38D78954EC2372F19A2ABE2C703948EC1F535AE815CF16DA2272EF` |
+| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,085,688 | `6514E228A735986D783EE3E3F316E6D494029CEE13F206AFC4E970596E28F9E6` |
+| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,766,216 | `588FA3BCB4E51133FE093B6A7923776D7CD4D9B0406DCD24B0B8D2660FF1FE11` |
+
+The zip and the AppImages hold file times, so they differ at every build; the Windows exe
+inside does not. The exe is 7.7 times the C# one's 840,192 bytes: the window's toolkit, the
+font reader and the two window fonts are now inside it rather than in Windows.
+
+*Superseded 2026-11-09:* until the Rust rewrite, `build.ps1` compiled the C# sources with
+Roslyn's `csc` from Visual Studio or its Build Tools (found with `vswhere`) with
+`/deterministic` (checked 2026-11-08: two builds, one SHA-256), else the .NET Framework's,
+which warned that the hash would differ, and `-Release` wrote
+`dist\KMRP-Font-Converter-<version>.zip`. Those builds:
 
 | Build | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -269,7 +368,7 @@ the .NET Framework's, which warns that the hash will differ.
 | its zip, the notices naming the icon, the copy in the root `dist\` | 722,680 | `5851FBB6AB10E841646C955C84A3C502E12212D6020EBD70E1D0321F41735D9B` |
 
 The zip holds file times, so it differs at every build; the exe inside does not. The
-last exe row is the 1.0.0 release's.
+last C# exe row was to be the 1.0.0 release's until the Rust rewrite replaced it.
 
 *Superseded 2026-11-09, twice:* until the bottom row was made taller, this section said the
 `30643C4A...` exe, which commit `a0cf97f` gave byte for byte, was the release's; then
@@ -284,16 +383,38 @@ unchanged.
 
 ## 7. Verifying
 
-`python tests/Test-FontConverter.py` builds the exe and runs it (2026-11-08:
-all checks passed): seven inputs (TTF, CFF OTF, a collection's face, a variable font,
-Georgia, WOFF, WOFF2) for both versions, each set checked (all 34 files; TGA type, depth,
+`python tests/Test-FontConverter.py` builds the program and runs it, on Windows, macOS or
+Linux (2026-11-09, the Rust exe `F64D66A2...` on Windows 11: all checks passed; 2026-11-08,
+the C# exe: all passed). Nine inputs (Arial TTF, KMRP's CFF OTF, KMRP's collection, KMRP's
+TTF, Cambria's collection face, Bahnschrift's variable font, Georgia, and Arial as WOFF and
+WOFF2; KMRP's three added 2026-11-09 so that a machine without Windows' fonts has inputs,
+and there the WOFF files are made from KMRP's TTF) for both versions, each set checked (all 34 files; TGA type, depth,
 length and size; `texturewidth`; every cell inside the atlas, none zero wide; no comma; the
 heights against the HD font's, or a sixth of them and the game's own for the original game;
 a power-of-two atlas there; ink in the dialogue font's A; no work folder left); random
 bytes, an empty file, a font with digits only and a WOFF claiming 2 GB refused with nothing
 written; a `.tpc` set aside earlier kept and the next one set aside as `-2`; a read-only file
 stopping the conversion with nothing changed; and the window closed while converting,
-leaving nothing.
+leaving nothing (Windows only: the check sends `WM_CLOSE`). Each set took 0.3 to 0.9 s
+(2026-11-09, Rust: 0.7 to 0.9 s for KMRP, 0.3 to 0.6 s for the original game; the C#
+program took 1.0 to 1.1 s and 0.5 to 0.7 s).
+
+*Corrected 2026-11-09:* the close check looked for the program's visible window. Under the
+Rust program it found none and failed: eframe shows its window only after the first frame,
+in which the conversion starts, and winit keeps a second visible window of its own. It now
+finds the window by its title and process. Traced by hand: `WM_CLOSE` during a conversion
+of all eleven tiles, the program exited 1 s later with nothing in the folder.
+
+`cargo test` runs the unit tests in `src/atlas.rs`: .NET's half-to-even rounding, the TXI's
+numbers rounded as .NET Framework wrote them, the Windows-1252 slots, and the rasteriser's
+coverage of a square.
+
+On Linux and macOS (2026-11-09): the x86_64 Linux program, and the same inside its
+AppImage, converted for both versions under WSL's Ubuntu 20.04 (the dialogue tile, 4
+files each). Not run there: `Test-FontConverter.py`, the window (section 3), the aarch64
+AppImage, anything on a Mac. The macOS code was type-checked for both architectures
+(`cargo check --target aarch64-apple-darwin` and `x86_64-apple-darwin`, no errors), not
+linked.
 
 By hand, before a release: open it on a PC where KMRP is installed and on one without (the
 Version box starts on KMRP and on Original Game); choose a font for a tile, switch the
@@ -307,5 +428,60 @@ KMRP the text is in the new font at the game's size.
 - The boxes round the examples: the audit asked whether they break "no boxes around
   examples"; they show the game's dark text backing and stay (recorded 2026-10-22).
 - The rasteriser for KMRP's version: exact-area coverage at six times, which KMRP fits down.
-- Per-monitor DPI: the window is system-DPI aware only, so on a second screen of another
-  scale it is stretched by Windows.
+- The arithmetic of the KMRP version: ported line for line, `Math.Round`'s half-to-even and
+  .NET Framework's number formatting with it (section 9).
+- The layout's numbers, the colours, the texts and the settings file's keys: the C#
+  program's, ported unchanged (2026-11-09).
+
+*Superseded 2026-11-09:* "Per-monitor DPI: the window is system-DPI aware only, so on a
+second screen of another scale it is stretched by Windows." winit, under the Rust window,
+is per-monitor DPI aware, and the window follows a new screen's scale (section 3); not
+checked on two screens.
+
+## 9. The Rust rewrite, measured (2026-11-09)
+
+The Rust program against the C# one (`81D4BD89...`), each converting the same three fonts
+for all eleven tiles, both versions, into empty folders; compared file by file with a
+script in the scratch folder (TXI text byte for byte, TGA alpha pixel by pixel) and glyph by
+glyph (each cell cropped by its TXI coordinates, top-left aligned). Rust build
+`F64D66A2...`.
+
+**KMRP version: the same arithmetic.** The TXI files are the C# program's byte for byte for
+Georgia and KMRP's Dialogue OTF, all 17 each. For Arial, 14 of 17 are; the other three
+(`fnt_creditsa`, `fnt_d16x16a`, `fnt_dialog16x16`, the Journal tile's, one size) differ in
+one cell: K is 50 pixels wide, against 51. Its ink reaches past its advance and the cell is
+the ink's width rounded up (section 2), and the outline's right edge, read by skrifa rather
+than DirectWrite, falls on the other side of a whole pixel; every cell after it moves one
+pixel. The atlases' pixels differ slightly, from the same outlines read by another reader:
+
+| Font (KMRP version) | TXI files the same | Pixels that differ | Mean difference there (of 255) | Largest |
+| --- | ---: | ---: | ---: | ---: |
+| KMRP Original HD Dialogue (CFF OTF) | 17 of 17 | 556,842 | 1.2 | 13 |
+| Georgia | 17 of 17 | 837,852 | 3.0 | 45 |
+| Arial | 14 of 17 | 743,869 | 3.3 | 252 (the cells moved by K) |
+
+**Original-game version: the hinting is the font's, no longer Windows'.** DirectWrite's
+GDI-classic drawing is Windows' own and not available elsewhere; the Rust program hints each
+letter with the font's own instructions through skrifa and fills it with the converter's
+rasteriser. Four of skrifa's targets were tried against the C# program's letters, over the
+3,658 cells from slot 33 up in each set:
+
+| Target | Arial: cells of another width, mean difference | Georgia | KMRP Dialogue |
+| --- | --- | --- | --- |
+| **Normal (FreeType's default), chosen** | 449, 38.5 | 700, 31.4 | 15, 26.6 |
+| Light (the same as Normal since FreeType 2.7) | 449, 38.5 | 700, 31.4 | 15, 26.6 |
+| Mono (strong hinting for black-and-white) | 530, 53.9 | 995, 66.4 | 15, 26.6 |
+| None (the outlines unhinted) | 502, 53.7 | 846, 55.6 | 6, 32.4 |
+
+(The mean difference is over the pixels inked in either, of 255.) *Rejected:* Mono, whose
+Georgia was visibly jagged at 10 pixels in a side-by-side picture of "Combat Movement
+Georgia"; unhinted, which is soft; keeping DirectWrite on Windows alone, which would have
+made the fonts differ by the system they were made on. With Normal the letters are a little
+narrower than Windows' (GDI-classic widens stems to whole pixels across), and their heights,
+baselines and the TXI's header fields are the same, as the regression test checks against
+the game's own. **Not yet seen in the game.**
+
+**What else changed with the rewrite**, all in sections 1, 3, 5 and 6: the window is egui's
+(the same layout; the 16:9 drag gone; fitted to the screen as KMSE); `--convert --exit`
+opens no window; WOFF files are unpacked in memory; the program is 6.5 MB instead of 0.8 MB;
+macOS and Linux builds.

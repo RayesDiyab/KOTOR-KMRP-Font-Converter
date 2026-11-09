@@ -15,7 +15,10 @@ are drawn from: https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patc
    anything untested said to be untested. Run `python .github/scripts/check_links.py`
    before committing a document.
 5. **Test before saying it works:** `python tests\Test-FontConverter.py` after any change to
-   `font-converter/`; for the fonts, KMRP's `tools/build_hd_original_atlases.py --check`.
-6. **Plain ASCII in sources**; non-ASCII characters in C# strings as `\uXXXX`. Write files
-   with backslashes (Windows paths, regexes) with a file-writing tool, never a shell heredoc.
+   `font-converter/` (it builds the Rust program and converts every font type for both
+   versions); for the fonts, KMRP's `tools/build_hd_original_atlases.py --check`. A claim
+   about macOS or Linux names where it was seen (CI, a Mac, WSL), or says it was not.
+6. **Plain ASCII in sources**; non-ASCII characters in Rust strings as `\u{XXXX}` (in the
+   C# program, until 2026-11-09, `\uXXXX`). Write files with backslashes (Windows paths,
+   regexes) with a file-writing tool, never a shell heredoc.
 7. **Plain words**: no em dash in docs, commits or replies.

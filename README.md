@@ -31,8 +31,8 @@ The KMRP Font Converter 1.0.0, as measured in its reference,
 - **Two versions, chosen beside Convert.** **KMRP** makes the fonts at KMRP's HD size;
   KMRP 1.6.0 or later fits them to your screen and text size and offers them in the game
   as **Modded Font**. **Original Game** makes them at the game's own sizes (10, 12, 14,
-  16, 19 and 32 pixels, each found equal to the game's own) with Windows' hinted
-  drawing, for a game without KMRP.
+  16, 19 and 32 pixels, each found equal to the game's own) with the font's own hinting,
+  for a game without KMRP.
 - **Font files:** TTF, OTF (both outline kinds), TTC and OTC collections, WOFF and
   WOFF2, and the named instances of a variable font. Type 1, `.fon`, `.dfont`, `.eot`
   and SVG fonts are refused with a message.
@@ -43,9 +43,14 @@ The KMRP Font Converter 1.0.0, as measured in its reference,
   renamed rather than deleted. Fonts already there are replaced only after you say so.
 - **Refuses what would break the game:** a font missing any letter A to Z or a to z (its
   text would be invisible), an atlas over 4096 pixels, a font file over 128 MB.
-- **One program, nothing installed.** It finds Steam's and GOG's KOTOR and its Override
-  folder by itself, remembers its settings in `%APPDATA%\KMRP Font Converter`, and opens
-  in a dark or light window at three text sizes.
+- **Windows, macOS and Linux, nothing installed.** One Rust program (since 2026-11-09; until
+  then C# for Windows alone): a Windows exe, a macOS app for Apple silicon and Intel, and
+  Linux AppImages for x86_64 and aarch64. It finds Steam's (and on Windows GOG's) KOTOR and
+  its Override folder by itself, remembers its settings in the system's settings folder
+  (`%APPDATA%\KMRP Font Converter` on Windows), and opens in a dark or light window at three
+  text sizes, fitted to the screen: on a smaller one everything shrinks evenly, as in KMSE.
+- **Missing letters shown, not hidden.** A font without some of the game's letters (Š, Œ,
+  € and the like) gets a badge with how many; pointing at it lists them.
 
 In the game it writes only the 34 font files (and renames a `.tpc` of the same name); it
 does not change what the text says, or the size of the game's text in the original game.
@@ -64,9 +69,12 @@ does not change what the text says, or the size of the game's text in the origin
 | --- | --- |
 | Game | *Star Wars: Knights of the Old Republic* (2003 PC release). Seen working with GOG's 1.03 `swkotor.exe` (`9C10E045...`) for the original game, and with KMRP on Steam's game |
 | For the KMRP version | KMRP 1.6.0 or later. An older KMRP draws these fonts six times too large |
-| OS | Windows 8 or later (Windows 7 with .NET Framework 4 installed). Linux with Proton or Wine: meant to work, **not yet tried** |
+| Windows | 10 or 11, 64-bit: `KMRP-Font-Converter-<version>-Windows-x64.zip`. Seen working on Windows 11 (2026-11-09) |
+| macOS | 11 or later, Apple silicon or Intel (one Universal 2 app): `KMRP-Font-Converter-<version>-macOS.dmg`. **Not yet run on a Mac**: compiled for both architectures on Windows (type-checked, not linked); the app is made by `build-macos.sh` on a Mac or by the CI workflow, not yet run |
+| Linux | x86_64 or aarch64: `KMRP-Font-Converter-<version>-Linux-<arch>.AppImage`. The x86_64 one converted fonts under WSL's Ubuntu 20.04 (2026-11-09); its window and the aarch64 one: **not yet tried** |
+| The game on macOS and Linux | The Windows game through Steam's Proton, CrossOver or Wine: the fonts go in its Override folder |
 
-1. Start `KMRP Font Converter.exe`. Nothing is installed.
+1. Start the program: `KMRP Font Converter.exe`, the app, or the AppImage. Nothing is installed.
 2. On a tile, **Choose a font...** or drag a font file onto it.
 3. In the **Version** box, choose **KMRP** or **Original Game**. It starts on KMRP when
    it finds KMRP in your game, and remembers your choice.
@@ -78,11 +86,15 @@ does not change what the text says, or the size of the game's text in the origin
 ending from any `*.tpc.before-font-converter`. The names are listed in the readme that
 comes with the program, [release/README.txt](font-converter/release/README.txt).
 
-**The 1.0.0 program** is 840,192 bytes, SHA-256
-`81D4BD89357D8377A893559BC8FF94D301C8307C71480FA4A08508C00E6F5722`, built
-deterministically: the same sources give the same bytes (two builds, one SHA-256, checked
-2026-11-08). It is **not signed**, so Windows SmartScreen and some antivirus
-programs may warn; it has not yet been scanned on VirusTotal.
+**The 1.0.0 Windows program** is 6,495,744 bytes, SHA-256
+`F64D66A255791E56FC8C10811A41EA9BDB1E6B847D3D83DE54A5F36968AE9071`, built
+deterministically: the same sources give the same bytes (a rebuild from clean gave the
+same SHA-256, 2026-11-09). It is **not signed**, so Windows SmartScreen and some antivirus
+programs may warn; it has not yet been scanned on VirusTotal. The macOS app is signed ad
+hoc, not notarized.
+
+*Superseded 2026-11-09:* until the Rust rewrite this section gave the C# exe, 840,192
+bytes, `81D4BD89...`. 1.0.0 was not released yet, so the version stayed 1.0.0.
 
 ## What it looks like
 
@@ -107,14 +119,15 @@ and Menu Large.
 | | KMRP | Original Game |
 | --- | --- | --- |
 | Size | The KMRP Original HD Font's: six times the game's fonts | The game's own: the HD sizes divided by six, which divide exactly |
-| Letters | Drawn from the font's outlines, exact-area coverage | Drawn by Windows (DirectWrite) with the font's own hinting, each letter on a whole pixel, so 10-pixel text stays sharp |
+| Letters | Drawn from the font's outlines, exact-area coverage | Hinted by the font's own instructions (skrifa, FreeType's normal target), each letter on a whole pixel, so 10-pixel text stays sharp. Until 2026-11-09 drawn by Windows (DirectWrite) |
 | Atlas | From the HD atlas's width, doubled until the letters fit | From 64 pixels, doubled: a power of two like the game's |
 | In the game | KMRP fits them to their drawn size, as Modded Font | The game draws them one texel to one pixel, as its own |
 
 Each font is written as the game's own: a 32-bit TGA atlas and a TXI file of
 measurements, Windows-1252 letters, no zero-wide letter, the HUD font with the game's
-black ring. Fonts are read through Windows' DirectWrite; WOFF is unpacked by the
-converter itself. The rules came from measuring the game's atlases, and the regression
+black ring. Fonts are read by the converter itself on every system (skrifa for TrueType,
+OpenType, collections and variable fonts, wuff for WOFF2, its own code for WOFF); until
+2026-11-09 Windows' DirectWrite read them. The rules came from measuring the game's atlases, and the regression
 test checks every set it writes against them. The whole mechanism, with the measurements,
 the corrections and what is deliberately left alone, is in
 [font-converter/docs/font-converter.md](font-converter/docs/font-converter.md).
@@ -136,33 +149,37 @@ measurements against the atlases and the rejected methods are in
 
 ## Build from source
 
-Building is only needed to change the program; players run the released exe.
+Building is only needed to change the program; players run the released packages.
 
 **Prerequisites**
 
-- Windows with .NET Framework 4. Visual Studio or its Build Tools for the deterministic
-  build (its C# compiler is found with `vswhere`); without them the .NET Framework's own
-  compiler is used, and it warns that the exe's hash will differ.
-- For the test: Python 3, Windows' own Arial, Cambria, Bahnschrift and Georgia, and for
-  WOFF files `fontTools` and `brotli`.
+- Rust (rustup, stable). On Windows the MSVC toolchain, with Visual Studio's C++ build
+  tools or Build Tools (the linker; the Windows SDK's `rc.exe` puts the icon in the exe).
+  On macOS Xcode's command line tools and the `aarch64-apple-darwin` and
+  `x86_64-apple-darwin` targets. On Linux curl and sha256sum; `--zig` builds with
+  `cargo-zigbuild` for glibc 2.31 and either architecture.
+- For the test: Python 3 with `fontTools`, `brotli` and Pillow. Windows' own Arial, Cambria,
+  Bahnschrift and Georgia are used where they are.
 - Only to remake `font-converter/data` or the fonts: a KMRP checkout beside this
   repository, or named by `KMRP_ROOT` (`tools/kmrp_checkout.py`), and Python with Pillow.
   The fonts' own tools list what they need in [fonts/README.md](fonts/README.md)
   section 7.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File font-converter\build.ps1
-python tests\Test-FontConverter.py
-```
+| System | Command | Makes, in `font-converter/dist/` |
+| --- | --- | --- |
+| Windows | `powershell -ExecutionPolicy Bypass -File font-converter\build.ps1 -Release` | `KMRP Font Converter.exe`, `KMRP-Font-Converter-<version>-Windows-x64.zip` |
+| macOS | `sh font-converter/build-macos.sh` | `KMRP Font Converter.app` (Universal 2), `KMRP-Font-Converter-<version>-macOS.dmg` and `.zip` |
+| Linux | `sh font-converter/build-linux.sh --arch x86_64` (or `aarch64`) | `KMRP-Font-Converter-<version>-Linux-<arch>.AppImage` |
+| Any | `python tests/Test-FontConverter.py` | The regression test |
 
-`build.ps1` writes `font-converter\dist\KMRP Font Converter.exe`; `-Release` also makes
-`KMRP-Font-Converter-<version>.zip` with the readme, the licences and the notices. The
-test builds it and converts seven inputs (TTF, CFF OTF, a collection, a variable font,
-Georgia, WOFF, WOFF2) for both versions, checking all 34
-files of each set, then feeds it broken and hostile files and checks nothing is written.
-With a built KMRP checkout beside this repository it also compares the original-game
-fonts with the game's own. The version is written once, as `Program.Version` in
-`Program.cs`.
+Each package holds the readme, the licences and the notices. The test builds the program
+and converts nine inputs (TTF, CFF OTF, two collections, a variable font, Georgia, KMRP's
+TTF, WOFF, WOFF2) for both versions, checking all 34 files of each set, then feeds it broken
+and hostile files and checks nothing is written. With a built KMRP checkout beside this
+repository it also compares the original-game fonts with the game's own. The workflow
+`.github/workflows/build.yml` runs it on Windows, macOS and Linux and makes the four
+packages on demand. The version is written once, as `version` in
+`font-converter/Cargo.toml`.
 
 > [!NOTE]
 > **Game files are never committed:** no atlas, texture or save of the game's. The
@@ -172,8 +189,10 @@ fonts with the game's own. The version is written once, as `Program.Version` in
 
 ```
 .github/scripts/      check_links.py: every relative link in the documents resolves
+.github/workflows/    build.yml: the tests on three systems, the four packages on demand
 docs/                 The documentation standard this repository holds itself to
-font-converter/       The converter: C# sources, build.ps1, its data and window fonts
+font-converter/       The converter: Rust sources (src/), the three build scripts, its data
+                      and window fonts
   docs/               Its reference and its release audit
   release/            The player's readme, the notices, the press kit and its script
 fonts/                The KMRP Original HD fonts
@@ -209,8 +228,11 @@ version 3 or later**, like KMRP ([LICENSE](LICENSE)). The KMRP Original HD fonts
 `fonts/` and as the two window fonts compiled into the converter, are under the **SIL
 Open Font License 1.1** ([fonts/OFL.txt](fonts/OFL.txt)), with no Reserved Font Name.
 
-The program carries no one else's code or fonts. Font files are read with Windows' own
-DirectWrite, which is part of Windows (or of Wine). The logos and the program's icon are
+The program is built from Rust crates by others (egui for the window, skrifa for reading
+fonts, wuff for WOFF2 and more), under MIT, Apache-2.0 and similar licences, all compatible
+with the GPL-3.0, and carries the fonts egui falls back on (Ubuntu Light, Hack, Noto Emoji);
+until the Rust rewrite of 2026-11-09 it carried no one else's code and read fonts through
+Windows' DirectWrite. The logos and the program's icon are
 KMRP's crest with letters drawn in the Georgia typeface (a picture of the letters, not the
 font file); the settings gear is the KMRP installer's own. What the program
 carries, and whose, is in
