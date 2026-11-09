@@ -19,8 +19,8 @@ Nothing has been released from this repository yet: no tag, no GitHub release
 ### KMRP Font Converter 1.0.0
 
 To be released on the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
-maintainer, 2026-11-08). The exe is 1,113,088 bytes, SHA-256
-`30643C4AA241B1B19B14052E21D6D32E99A34E2FDB7EF4BF9858131F15032526`, built deterministically
+maintainer, 2026-11-08). The exe is 840,192 bytes, SHA-256
+`81D4BD89357D8377A893559BC8FF94D301C8307C71480FA4A08508C00E6F5722`, built deterministically
 from this repository; how it was checked is in
 [font-converter.md](font-converter/docs/font-converter.md) section 6.
 
@@ -44,6 +44,12 @@ from this repository; how it was checked is in
   button turning green ("Converted").
 - The window's text at KMSE's sizes and drawn at the screen's own pixels.
 - The window split from one 1,848-line file into nine by job.
+- The bottom row 86 pixels high instead of 68, and "Version" larger (2026-11-09); until then
+  1.0.0's exe was `30643C4A...`.
+- The release zip holds its five files at its root, without a folder (2026-11-09).
+- The program's icon is the sigil above FONT, as in the README, instead of KMRP's installer
+  icon (2026-11-09); the exe is 272,896 bytes smaller for it. Until then 1.0.0's exe was
+  `89B63293...`.
 
 **Not yet:** run under Proton or Wine; signed; scanned on VirusTotal. In the game, not yet
 looked at: the HUD's numbers, the end credits and Menu Large.

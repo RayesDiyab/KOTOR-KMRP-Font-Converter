@@ -624,8 +624,10 @@ namespace KmrpFontConverter
             g.Restore(state);
         }
 
-        // The bottom row: the count, the folder, Clear, the Version box and Convert.
-        private const float ActionsY = 770, ActionsH = 68;
+        // The bottom row: the count, the folder, Clear, the Version box and Convert. 86 high
+        // since 2026-11-09 (was 770 and 68; the maintainer: "the version looks cramped
+        // increase the height of the bottom buttons"); 18 below the groups, which end at 742.
+        private const float ActionsY = 760, ActionsH = 86;
 
         private void PaintActions(Graphics g)
         {
@@ -741,7 +743,7 @@ namespace KmrpFontConverter
 
             // The footer line, each piece after the last.
             Font foot = Theme.Body(15);
-            float fy = 872 - Theme.T(12), fh = Theme.T(24), fx = 62;
+            float fy = 876 - Theme.T(12), fh = Theme.T(24), fx = 62;
             string versionText = "v" + Program.Version;
             Theme.Draw(g, versionText, foot, Theme.Faint, new RectangleF(fx, fy, Theme.Width(g, versionText, foot) + 4, fh));
             fx += Theme.Width(g, versionText, foot) + 12;
@@ -761,9 +763,10 @@ namespace KmrpFontConverter
         private void PaintVersion(Graphics g, RectangleF box, bool busy)
         {
             Theme.Box(g, box, 5, Theme.Field, Theme.Edge);
-            Font label = Theme.Body(13), choice = Theme.Display(14);
-            float labelH = Theme.T(16), rowsTop = box.Y + 6 + labelH, rowH = (box.Bottom - 5 - rowsTop) / 2;
-            Theme.Draw(g, "Version", label, Theme.Gold, new RectangleF(box.X + 12, box.Y + 4, box.Width - 20, labelH));
+            // "Version" at 15 since 2026-11-09 (was 13; the maintainer: "make Version gr\u00f6sser").
+            Font label = Theme.Body(15), choice = Theme.Display(14);
+            float labelH = Theme.T(19), rowsTop = box.Y + 7 + labelH, rowH = (box.Bottom - 7 - rowsTop) / 2;
+            Theme.Draw(g, "Version", label, Theme.Gold, new RectangleF(box.X + 12, box.Y + 6, box.Width - 20, labelH));
             var options = new[] { new KeyValuePair<Target, string>(Target.Kmrp, "KMRP"), new KeyValuePair<Target, string>(Target.Original, "Original Game") };
             for (int i = 0; i < options.Length; i++)
             {
@@ -772,7 +775,9 @@ namespace KmrpFontConverter
                 string id = "version:" + (t == Target.Kmrp ? "kmrp" : "original");
                 bool lit = !busy && !on && Hover(id);
                 var row = new RectangleF(box.X + 4, rowsTop + i * rowH, box.Width - 8, rowH);
-                float ring = Math.Min(Theme.T(8), rowH / 2 - 2), cx = box.X + 12 + ring, cy = row.Y + rowH / 2;
+                // 3.5 each side of a ring, less half the pen: 5 pixels clear between the two rings
+                // at Medium and Large, measured 2026-11-09 (rowH / 2 - 2 let them touch at Large).
+                float ring = Math.Min(Theme.T(8), rowH / 2 - 3.5f), cx = box.X + 12 + ring, cy = row.Y + rowH / 2;
                 using (var pen = new Pen(lit ? Theme.Text : Theme.KotorBlue, Math.Max(1.6f, ring / 3.6f)))
                     g.DrawEllipse(pen, cx - ring, cy - ring, ring * 2, ring * 2);
                 if (on)

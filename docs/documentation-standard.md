@@ -37,7 +37,10 @@ note or memory is a different claim and is labelled as such: it may be wrong.
 > sentence had been true when written and nobody measured it again.
 
 **2. State the build.** A claim about what the program does names the exe it was seen in:
-its version, length and SHA-256 (1.0.0 is 1,113,088 bytes, `30643C4A...`). A claim about
+its version, length and SHA-256 (1.0.0 is 840,192 bytes, `81D4BD89...`). Before it
+was released, 1.0.0 was three different exes over 2026-11-08 and 09: `30643C4A...`, then
+`89B63293...` after the taller bottom row, at the same length, so length alone would not
+have told those two apart. A claim about
 the fonts names the files' hashes ([`fonts/README.md`](../fonts/README.md) section 1). A
 claim about the game names the game's executable: the GOG 1.03 exe (`9C10E045...`) and
 Steam's (`34E6D971...`) are different programs. "It works" without a build is a claim

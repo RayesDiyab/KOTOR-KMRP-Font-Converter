@@ -17,7 +17,9 @@ It shares no code with KMRP's patch or installer and carries KMRP's branding. Ve
 1.0.0, released with KMRP 1.6.0 and KMSE on the same day (the maintainer, 2026-11-08).
 **Run under Proton: not yet.** In the game: Georgia made for KMRP was seen on KMRP's Text
 Size and Font page on 2026-11-08 (the maintainer's screenshot, before the release changes
-below). Georgia made for the original game (1.0.0, `30643C4A...`) was seen in a vanilla game
+below). Georgia made for the original game (1.0.0 as built then, `30643C4A...`; the build
+since differs only in the window's bottom row, section 3, and `Test-FontConverter.py` finds
+what it writes unchanged) was seen in a vanilla game
 the same day: a copy in `build/vanilla-font-check/game` with the untouched GOG 1.03 exe
 (`9C10E045...`), the original `binkw32.dll`, no KMRP or KPM, the Steam game's data linked in,
 1280x960 windowed. The main menu, Load Game, the inventory with its tutorial pop-up and an
@@ -46,10 +48,10 @@ Split by job on 2026-11-08 (audit: the window was one 1,848-line file).
 | `font-logo.png` | The repository README's logo, not built into the program: the same tool with `--text FONT`, at full size, 677x539 (2026-11-09) |
 | `release/make_press_kit.py`, `release/press-kit/` | The press kit's five pages, in the converter's own style, from screenshots kept out of the repository (its README says where each came from) |
 | `make_data.py`, `data/` | Makes `data/`: `references.txt`, `examples.txt` and the example PNGs, from KMRP's `assets/hd-original-fonts`; committed, so the converter builds without the rest of KMRP |
-| `favicon.ico` | The window icon, a copy of `src/patcher/favicon.ico` |
+| `favicon.ico`, `make_icon.py` | The program's icon, compiled into the exe (`/win32icon`); the window takes it from there. Since 2026-11-09 the sigil above FONT, made by `make_icon.py` from `font-logo.png` centred on a transparent square, at 16, 24, 32, 48, 64, 128 and 256 pixels (the maintainer: "make the app icon be the sigil with FONT below it like in the readme"). Until then a copy of KMRP's installer icon, `src/patcher/favicon.ico` (370,070 bytes; the new one is 97,129, which made the exe 272,896 bytes smaller). FONT reads from 24 pixels up; at 16 it is the shape of the word |
 | `settings.png` | The Settings button's gear: the installer's `src/patcher/icons/Settings.png` cropped to its ink and made 512 px, drawn in one colour from its alpha |
 | `fonts/` | The window's text: KMRP Original HD Menu (titles) and Descriptions (text), TrueType copies from `fonts/KMRP-OriginalHD.ttc`'s build (GDI+ cannot load the OTF files' CFF outlines), SIL OFL 1.1, with `OFL.txt`; compiled in and loaded from memory |
-| `release/README.txt`, `release/THIRD-PARTY-NOTICES.txt` | The player's readme and the notices, put in the release zip with `LICENSE.txt` (KMRP's GPL) and `OFL.txt` |
+| `release/README.txt`, `release/THIRD-PARTY-NOTICES.txt` | The player's readme and the notices, put in the release zip with `LICENSE.txt` (this repository's `LICENSE`, GPL-3.0) and `OFL.txt` |
 | `tests/Test-FontConverter.py` (this repository's root) | Builds and runs it (section 7) |
 
 *Removed 2026-11-08:* `FontConverter.cs` (split into the files above), and `logos.html`,
@@ -135,6 +137,22 @@ Size and Font page draws them in the game. The choice is kept in `settings.txt`
 (`patches\kmrp.dll` or the `KMRP` folder) or, with no game there, when any game found has
 it; else the original game. With Original Game chosen the logo's word is KOTOR, and the
 title moves right by its extra width (33 pixels).
+
+**The bottom row, taller** (2026-11-09, the maintainer from a screenshot: "the version
+looks cramped increase the height of the bottom buttons", then "make Version grösser").
+On the 1600x900 canvas (`ActionsY`, `ActionsH`, `PaintVersion` in `MainForm.cs`):
+
+| | Until 2026-11-09 | Since |
+| --- | --- | --- |
+| The row (the folder, Clear, the Version box, Convert) | y 770, 68 high | y 760, 86 high: 18 below the groups, which end at 742, as the 14 between them |
+| The footer's middle | y 872 | y 876, clear of the taller row |
+| "Version" | `Body(13)`, a 16-high line | `Body(15)`, a 19-high line |
+| The radio rings | radius up to a row's half less 2 | less 3.5: at Large text the two rings had touched |
+
+Measured on PrintWindow captures at 1600x900 (2026-11-09): at Medium the box is 85 pixels
+high, "Version" 11 below its top edge and the lower ring 8 above its bottom edge; the two
+rings, each 20 across, 5 pixels clear of each other at Medium and Large and 8 at Small
+(each ring's ink measured, not by eye).
 
 **Text: KMSE's sizes, at the device's pixels** (2026-11-08, the maintainer: "like kmse has
 crisp fonts in the program, make the Font Converter have the same crispy and large fonts").
@@ -231,8 +249,10 @@ For screenshots, checks and the regression test; none of these is remembered:
 ## 6. Building and the release
 
 `powershell -ExecutionPolicy Bypass -File font-converter\build.ps1 -Release` builds the exe
-and `dist\KMRP-Font-Converter-<version>.zip` holding it, `README.txt`, `LICENSE.txt` (KMRP's
-GPL-3.0), `OFL.txt` and `THIRD-PARTY-NOTICES.txt` (audit B3). The compiler is Roslyn's
+and `dist\KMRP-Font-Converter-<version>.zip` holding it, `README.txt`, `LICENSE.txt` (this
+repository's GPL-3.0), `OFL.txt` and `THIRD-PARTY-NOTICES.txt` (audit B3), at the zip's root
+with no folder (since 2026-11-09, the maintainer: "put everything in the root"; before, they
+were in `KMRP Font Converter <version>\`). The compiler is Roslyn's
 `csc` from Visual Studio or its Build Tools (found with `vswhere`) with `/deterministic`, so
 a rebuild gives the same exe (audit R2; checked 2026-11-08: two builds, one SHA-256), else
 the .NET Framework's, which warns that the hash will differ.
@@ -243,10 +263,18 @@ the .NET Framework's, which warns that the hash will differ.
 | its zip, `KMRP-Font-Converter-1.0.0.zip` | 791,587 | `279E88BCE48157900BB304B313AB9C7D5D4BC8350BA7AA5E1D9F5166E8D3965F` |
 | 1.0.0 exe, 2026-11-09, built from commit `a0cf97f` in this repository | 1,113,088 | `30643C4AA241B1B19B14052E21D6D32E99A34E2FDB7EF4BF9858131F15032526`, the same |
 | its zip, 2026-11-09, with the corrected `README.txt` and notices below | 791,603 | `686E47908B0CE63E609FC44468B34B62EC874E92F622D2AD25EE333F32CE8F45` |
+| 1.0.0 exe, 2026-11-09, the taller bottom row (section 3) | 1,113,088 | `89B63293648D713F653EEC78B45498F7A4CB5659F87531E70B1ED61D1A214CEE` |
+| its zip, the files at its root | 791,343 | `71C366D5B0FD3CBF92BCB5D4A7CE38BB5F4DECE36FD2778B3EA810E136212569` |
+| **1.0.0 exe, 2026-11-09, the sigil-and-FONT icon (section 1)** | 840,192 | `81D4BD89357D8377A893559BC8FF94D301C8307C71480FA4A08508C00E6F5722` |
+| its zip, the notices naming the icon, the copy in the root `dist\` | 722,680 | `5851FBB6AB10E841646C955C84A3C502E12212D6020EBD70E1D0321F41735D9B` |
 
 The zip holds file times, so it differs at every build; the exe inside does not. The
-committed sources give the exe recorded on 2026-11-08 byte for byte, so that SHA-256 is
-the 1.0.0 release's.
+last exe row is the 1.0.0 release's.
+
+*Superseded 2026-11-09, twice:* until the bottom row was made taller, this section said the
+`30643C4A...` exe, which commit `a0cf97f` gave byte for byte, was the release's; then
+`89B63293...` until the new icon. 1.0.0 was not released yet, so the version stayed 1.0.0
+and its exe changed.
 
 *Corrected 2026-11-09:* the zip of 2026-11-08 carried a `README.txt` saying the source is
 "in the KMRP repository above, in the font-converter folder" and notices linking to KMRP's

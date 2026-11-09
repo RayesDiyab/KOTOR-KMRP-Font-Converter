@@ -17,9 +17,10 @@ The pictures of example text on the tiles are drawn in the same KMRP Original HD
 Pictures
 --------
 
-The KMRP and KOTOR logos: the crest is KMRP's own artwork (its sigil); the letters are
-drawn with the Georgia typeface (a picture of the letters, not the font file). The
-settings gear and the window's icon are the KMRP installer's own.
+The KMRP and KOTOR logos, and the program's icon (the same crest above the word FONT): the
+crest is KMRP's own artwork (its sigil); the letters are drawn with the Georgia typeface
+(a picture of the letters, not the font file). The settings gear is the KMRP installer's
+own.
 
 Names
 -----

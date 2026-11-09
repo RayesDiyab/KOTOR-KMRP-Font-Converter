@@ -82,16 +82,18 @@ if ($Release) {
     $stage = Join-Path $dist "KMRP Font Converter $version"
     if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
     New-Item -ItemType Directory -Path $stage | Out-Null
-    $kmrp = Split-Path $here -Parent
+    $root = Split-Path $here -Parent      # this repository
     Copy-Item -LiteralPath $exe -Destination $stage
     Copy-Item -LiteralPath (Join-Path $here "release\README.txt") -Destination $stage
     Copy-Item -LiteralPath (Join-Path $here "release\THIRD-PARTY-NOTICES.txt") -Destination $stage
     Copy-Item -LiteralPath (Join-Path $here "fonts\OFL.txt") -Destination $stage
-    Copy-Item -LiteralPath (Join-Path $kmrp "LICENSE") -Destination (Join-Path $stage "LICENSE.txt")
+    Copy-Item -LiteralPath (Join-Path $root "LICENSE") -Destination (Join-Path $stage "LICENSE.txt")
     $zip = Join-Path $dist "KMRP-Font-Converter-$version.zip"
     if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [System.IO.Compression.CompressionLevel]::Optimal, $true)
+    # The files at the zip's root, no folder (the maintainer, 2026-11-09: "put everything in
+    # the root"); until then they were inside "KMRP Font Converter <version>\".
+    [System.IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
     $zipHash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash
     Write-Host ("{0}  {1:n0} bytes  SHA-256 {2}" -f $zip, (Get-Item -LiteralPath $zip).Length, $zipHash)
 }

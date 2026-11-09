@@ -78,10 +78,10 @@ does not change what the text says, or the size of the game's text in the origin
 ending from any `*.tpc.before-font-converter`. The names are listed in the readme that
 comes with the program, [release/README.txt](font-converter/release/README.txt).
 
-**The 1.0.0 program** is 1,113,088 bytes, SHA-256
-`30643C4AA241B1B19B14052E21D6D32E99A34E2FDB7EF4BF9858131F15032526`, built
-deterministically: the same sources give the same bytes, checked again from commit
-`a0cf97f` and with this documentation on 2026-11-09. It is **not signed**, so Windows SmartScreen and some antivirus
+**The 1.0.0 program** is 840,192 bytes, SHA-256
+`81D4BD89357D8377A893559BC8FF94D301C8307C71480FA4A08508C00E6F5722`, built
+deterministically: the same sources give the same bytes (two builds, one SHA-256, checked
+2026-11-08). It is **not signed**, so Windows SmartScreen and some antivirus
 programs may warn; it has not yet been scanned on VirusTotal.
 
 ## What it looks like
@@ -210,9 +210,9 @@ version 3 or later**, like KMRP ([LICENSE](LICENSE)). The KMRP Original HD fonts
 Open Font License 1.1** ([fonts/OFL.txt](fonts/OFL.txt)), with no Reserved Font Name.
 
 The program carries no one else's code or fonts. Font files are read with Windows' own
-DirectWrite, which is part of Windows (or of Wine). The logos are KMRP's crest with
-letters drawn in the Georgia typeface (a picture of the letters, not the font file); the
-settings gear and the window's icon are the KMRP installer's own. What the program
+DirectWrite, which is part of Windows (or of Wine). The logos and the program's icon are
+KMRP's crest with letters drawn in the Georgia typeface (a picture of the letters, not the
+font file); the settings gear is the KMRP installer's own. What the program
 carries, and whose, is in
 [release/THIRD-PARTY-NOTICES.txt](font-converter/release/THIRD-PARTY-NOTICES.txt).
 
