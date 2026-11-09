@@ -1,14 +1,14 @@
 #!/bin/sh
 # Builds the KMRP Font Converter for Linux as an AppImage, into dist/ beside this file:
 #   dist/KOTOR-Font-Converter-<version>-Linux-x86_64.AppImage    Intel and AMD
-#   dist/KOTOR-Font-Converter-<version>-Linux-aarch64.AppImage   ARM (with --arch aarch64)
 # (named so since 2026-11-09, the maintainer; until then KMRP-Font-Converter-...)
+# x86_64 only since 2026-11-09 (the maintainer: "make linux one build for this repo the
+# x86_64 AppImage"); until then --arch aarch64 also made an ARM AppImage, never run.
 #
 #   sh build-linux.sh                    tests, then the release build, then the AppImage
-#   sh build-linux.sh --arch aarch64     for the other architecture (default: this machine's)
 #   sh build-linux.sh --zig              build with cargo-zigbuild for glibc 2.31, so the
-#                                        program runs on older systems and either architecture
-#                                        can be built on either machine
+#                                        program runs on older systems and can be built on
+#                                        an ARM machine too
 #   sh build-linux.sh --no-tests         skips the tests (the release build is the same)
 #   sh build-linux.sh --pack-only        packs the program already in build/target/<target>/release
 #
@@ -18,7 +18,7 @@
 # once into build/tools and checked against the SHA-256 GitHub publishes for it.
 # appimagetool fetches the AppImage runtime for the architecture it packs for from GitHub.
 #
-# Needs curl and sha256sum; to build, Rust (rustup, stable) with the target installed, and
+# Needs curl, sha256sum and file (appimagetool stops without it); to build, Rust (rustup, stable) with the target installed, and
 # with --zig cargo-zigbuild and zig. The AppImage carries the program alone: the libraries it
 # opens (OpenGL or EGL; X11 with Xcursor, Xi and xkbcommon, or Wayland and xkbcommon) are a
 # Linux desktop's own and are taken from the system, as AppImages do. File pickers are the
@@ -32,14 +32,12 @@ cd "$here"
 tests=1
 build=1
 zig=0
-arch=$(uname -m)
+arch=x86_64
 while [ $# -gt 0 ]; do
     case "$1" in
         --no-tests) tests=0 ;;
         --pack-only) tests=0; build=0 ;;
         --zig) zig=1 ;;
-        --arch) shift; arch=${1:-} ;;
-        --arch=*) arch=${1#--arch=} ;;
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
     shift
@@ -48,13 +46,9 @@ done
 fail() { echo "build-linux.sh: $*" >&2; exit 1; }
 
 [ "$(uname)" = "Linux" ] || fail "this script builds the Linux AppImage; on macOS use build-macos.sh, on Windows build.ps1"
-case "$arch" in
-    x86_64|amd64) arch=x86_64 ;;
-    aarch64|arm64) arch=aarch64 ;;
-    *) fail "no AppImage for $arch: x86_64 or aarch64" ;;
-esac
+[ "$(uname -m)" = "$arch" ] || [ "$zig" = 1 ] || [ "$build" = 0 ] || fail "on $(uname -m) the x86_64 program is built with --zig"
 target="$arch-unknown-linux-gnu"
-for tool in curl sha256sum; do
+for tool in curl sha256sum file; do
     command -v "$tool" >/dev/null 2>&1 || fail "$tool was not found"
 done
 if [ "$build" = 1 ]; then

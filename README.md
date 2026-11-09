@@ -45,7 +45,7 @@ The KMRP Font Converter 1.0.0, as measured in its reference,
   text would be invisible), an atlas over 4096 pixels, a font file over 128 MB.
 - **Windows, macOS and Linux, nothing installed.** One Rust program (since 2026-11-09; until
   then C# for Windows alone): a Windows exe, a macOS app for Apple silicon and Intel, and
-  Linux AppImages for x86_64 and aarch64. It finds Steam's (and on Windows GOG's) KOTOR and
+  a Linux AppImage for x86_64. It finds Steam's (and on Windows GOG's) KOTOR and
   its Override folder by itself, remembers its settings in the system's settings folder
   (`%APPDATA%\KMRP Font Converter` on Windows), and opens in a dark or light window at three
   text sizes, fitted to the screen: on a smaller one everything shrinks evenly, as in KMSE.
@@ -71,7 +71,7 @@ does not change what the text says, or the size of the game's text in the origin
 | For the KMRP version | KMRP 1.6.0 or later. An older KMRP draws these fonts six times too large |
 | Windows | 10 or 11, 64-bit: `KOTOR-Font-Converter-<version>-Windows-x64.zip`. Seen working on Windows 11 (2026-11-09) |
 | macOS | 11 or later, Apple silicon or Intel (one Universal 2 app): `KOTOR-Font-Converter-<version>-macOS.dmg`. **Not yet run on a Mac**: compiled for both architectures on Windows (type-checked, not linked); the app is made by `build-macos.sh` on a Mac, not yet run. CI builds and tests the program on macOS (no app) |
-| Linux | x86_64 or aarch64: `KOTOR-Font-Converter-<version>-Linux-<arch>.AppImage`. The x86_64 one converted fonts under WSL's Ubuntu 20.04 (2026-11-09); its window and the aarch64 one: **not yet tried** |
+| Linux | x86_64 (Intel or AMD, the Steam Deck too): `KOTOR-Font-Converter-<version>-Linux-x86_64.AppImage`. It converted fonts under WSL's Ubuntu 20.04 and, with its window open, on a Steam Deck's SteamOS (both 2026-11-09). There is no ARM build (an aarch64 AppImage was made until 2026-11-09, never run) |
 | The game on macOS and Linux | The Windows game through Steam's Proton, CrossOver or Wine: the fonts go in its Override folder |
 
 1. Start the program: `KOTOR-Font-Converter-<version>-Windows-x64.exe`, the app, or the AppImage. Nothing is installed.
@@ -156,8 +156,8 @@ Building is only needed to change the program; players run the released packages
 - Rust (rustup, stable). On Windows the MSVC toolchain, with Visual Studio's C++ build
   tools or Build Tools (the linker; the Windows SDK's `rc.exe` puts the icon in the exe).
   On macOS Xcode's command line tools and the `aarch64-apple-darwin` and
-  `x86_64-apple-darwin` targets. On Linux curl and sha256sum; `--zig` builds with
-  `cargo-zigbuild` for glibc 2.31 and either architecture.
+  `x86_64-apple-darwin` targets. On Linux curl, sha256sum and file; `--zig` builds with
+  `cargo-zigbuild` for glibc 2.31, and on an ARM machine.
 - For the test: Python 3 with `fontTools`, `brotli` and Pillow. Windows' own Arial, Cambria,
   Bahnschrift and Georgia are used where they are.
 - Only to remake `font-converter/data` or the fonts: a KMRP checkout beside this
@@ -169,7 +169,7 @@ Building is only needed to change the program; players run the released packages
 | --- | --- | --- |
 | Windows | `powershell -ExecutionPolicy Bypass -File font-converter\build.ps1 -Release` | `KOTOR-Font-Converter-<version>-Windows-x64.exe` and `.zip` |
 | macOS | `sh font-converter/build-macos.sh` | `KOTOR-Font-Converter-<version>-macOS.app` (Universal 2), `.dmg` and `.zip` |
-| Linux | `sh font-converter/build-linux.sh --arch x86_64` (or `aarch64`) | `KOTOR-Font-Converter-<version>-Linux-<arch>.AppImage` |
+| Linux | `sh font-converter/build-linux.sh` | `KOTOR-Font-Converter-<version>-Linux-x86_64.AppImage` |
 | Any | `python tests/Test-FontConverter.py` | The regression test |
 
 Each package holds the readme, the licences and the notices. The test builds the program

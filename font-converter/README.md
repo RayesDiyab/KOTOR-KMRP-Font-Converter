@@ -3,7 +3,7 @@
 Turns any font file into Star Wars: Knights of the Old Republic's game fonts, for KMRP
 (1.6.0 or later, which sizes them for the screen and offers them as Modded Font) or for
 the original game, at the game's own font sizes. One Rust program for Windows, macOS (Apple
-silicon and Intel) and Linux (x86_64 and aarch64), nothing installed. Until 2026-11-09 it
+silicon and Intel) and Linux (x86_64), nothing installed. Until 2026-11-09 it
 was a C# program for Windows alone (.NET Framework 4); the fonts it writes for KMRP are made
 by the same arithmetic, measured in
 [docs/font-converter.md](docs/font-converter.md) section 9.
@@ -24,7 +24,7 @@ the only place it is written.
 | --- | --- | --- |
 | Windows | `powershell -ExecutionPolicy Bypass -File build.ps1 [-Release]` | `KOTOR-Font-Converter-<version>-Windows-x64.exe`; with `-Release` the `.zip` of the same name |
 | macOS | `sh build-macos.sh` | `KOTOR-Font-Converter-<version>-macOS.app` (Universal 2), `.dmg` and `.zip` |
-| Linux | `sh build-linux.sh [--arch x86_64\|aarch64] [--zig]` | `KOTOR-Font-Converter-<version>-Linux-<arch>.AppImage` |
+| Linux | `sh build-linux.sh [--zig]` | `KOTOR-Font-Converter-<version>-Linux-x86_64.AppImage` |
 
 Each script runs the unit tests first (`--no-tests` / `-NoTests` skips them), builds with
 `--locked`, and checks what it made. The Windows exe is deterministic: the same sources give

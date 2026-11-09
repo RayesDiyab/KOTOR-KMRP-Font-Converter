@@ -30,13 +30,16 @@ looked at there: the HUD's numbers, the end credits, Menu Large.
 
 **Rewritten in Rust on 2026-11-09** (the maintainer: "rewrite in rust, create windows, macos
 and linux (intel and silicon) appimage version"). One source now builds the Windows exe, a
-macOS app for Apple silicon and Intel, and Linux AppImages for x86_64 and aarch64. Fonts are
+macOS app for Apple silicon and Intel, and a Linux AppImage for x86_64 (also one for aarch64
+until the maintainer's "make linux one build for this repo the x86_64 AppImage", the same
+day: "silicon" was meant for the Mac). Fonts are
 read and the original game's letters hinted by the program itself instead of Windows'
 DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 11,238,912
 bytes, SHA-256 `DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348`. What
 changed in what it writes is measured in section 9. **Not yet seen in the game:** any font
 the Rust program wrote; the game sightings above are of the C# program's fonts. **Not yet
-run:** the macOS app (no Mac here), the Linux window and the aarch64 AppImage.
+run:** the macOS app (no Mac here). The aarch64 AppImage was never run before it was
+dropped. The Linux window: seen on a Steam Deck's SteamOS on 2026-11-09 (section 7).
 
 ## 1. Files
 
@@ -343,7 +346,7 @@ and Linux scripts follow KMSE's own.
 | --- | --- | --- | --- |
 | `build.ps1 [-Release]` | Windows, Rust with the MSVC toolchain | `KOTOR-Font-Converter-<v>-Windows-x64.exe`; `KOTOR-Font-Converter-<v>-Windows-x64.zip`, the files at its root | the exe's SHA-256 printed |
 | `build-macos.sh [--arm64-only]` | macOS, Xcode's command line tools | `KOTOR-Font-Converter-<v>-macOS.app` (Universal 2: `lipo` of the aarch64 and x86_64 builds, macOS 11 or later, ad hoc signed unless `KMRP_SIGN_IDENTITY`, notarized with `KMRP_NOTARY_PROFILE`); `KOTOR-Font-Converter-<v>-macOS.dmg` (with a link to Applications) and `.zip` | both architectures in the app, only the system's libraries loaded, no path of the Mac in it, a headless conversion for both versions |
-| `build-linux.sh [--arch x86_64\|aarch64] [--zig] [--pack-only]` | Linux or WSL | `KOTOR-Font-Converter-<v>-Linux-<arch>.AppImage`, packed by appimagetool 1.9.1 (its SHA-256 checked against GitHub's: `ed4ce84f...` x86_64, `f0837e74...` aarch64) | only glibc and libgcc linked, the glibc it needs, no home path, a headless conversion for both versions where the architecture is the machine's |
+| `build-linux.sh [--zig] [--pack-only]` | Linux or WSL; on an ARM machine with `--zig` | `KOTOR-Font-Converter-<v>-Linux-x86_64.AppImage`, packed by appimagetool 1.9.1 for the machine it runs on (its SHA-256 checked against GitHub's: `ed4ce84f...` x86_64, `f0837e74...` aarch64) | only glibc and libgcc linked, the glibc it needs, no home path, a headless conversion for both versions on an x86_64 machine |
 
 The Windows exe is deterministic: the linker writes no time stamp (`/Brepro`,
 `.cargo/config.toml`) and the sources' folders become fixed names
@@ -372,7 +375,7 @@ to the download from WSL. The macOS app was not made: that needs a Mac.
 | `KOTOR-Font-Converter-1.0.0-Windows-x64.exe` | 11,238,912 | `DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348` |
 | `KOTOR-Font-Converter-1.0.0-Windows-x64.zip` | 5,663,699 | `A08782C58CF071253724BD4BB7E17E7560DB239D78AEB6635708A4F4E443B6D7` |
 | `KOTOR-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 6,707,704 | `503466BEA4A8556EC59C116DBE304BE50F067297B8ABD68B0BADE0E0BC298201` |
-| `KOTOR-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 6,289,928 | `437F78095C31BAE3FABEB262F553EB9DCC140F4661936BD3ABA6A8C3315E3DF0` |
+| `KOTOR-Font-Converter-1.0.0-Linux-aarch64.AppImage` (dropped 2026-11-09, not to be released) | 6,289,928 | `437F78095C31BAE3FABEB262F553EB9DCC140F4661936BD3ABA6A8C3315E3DF0` |
 
 The zip and the AppImages hold file times, so they differ at every build; the Windows exe
 inside does not. The exe is 13.4 times the C# one's 840,192 bytes: the window's toolkit with
@@ -453,7 +456,13 @@ wider from the same left edge, no taller).
 On Linux and macOS (2026-11-09): the x86_64 Linux program, and the same inside its
 AppImage, converted for both versions under WSL's Ubuntu 20.04 (the dialogue tile, 4
 files each). Not run there: `Test-FontConverter.py`, the window (section 3), the aarch64
-AppImage, anything on a Mac. The macOS code was type-checked for both architectures
+AppImage (since dropped), anything on a Mac.
+
+On a Steam Deck (2026-11-09): the x86_64 AppImage, built with `build-linux.sh` in an
+Ubuntu 24.04 distrobox (so it needs glibc 2.39; a release is built with `--zig` for 2.31),
+converted the dialogue tile for KMRP on SteamOS itself (glibc 2.41, 4 files), and its
+window opened under KDE's Wayland session, drew every tile and found Steam's KOTOR
+Override folder. Not tried there: a conversion from the window, the fonts in the game. The macOS code was type-checked for both architectures
 (`cargo check --target aarch64-apple-darwin` and `x86_64-apple-darwin`, no errors), not
 linked.
 

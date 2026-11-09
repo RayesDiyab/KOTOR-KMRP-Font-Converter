@@ -27,8 +27,8 @@ from this repository; it and the other packages, and how they were checked, are 
 **Changed, 2026-11-09: rewritten in Rust, for Windows, macOS and Linux**
 
 - One Rust program instead of the C# one (.NET Framework 4, Windows only): a Windows x64
-  exe and zip, a macOS app for Apple silicon and Intel (Universal 2, DMG and zip), and
-  Linux AppImages for x86_64 and aarch64. `build.ps1`, `build-macos.sh` and
+  exe and zip, a macOS app for Apple silicon and Intel (Universal 2, DMG and zip), and a
+  Linux AppImage for x86_64. `build.ps1`, `build-macos.sh` and
   `build-linux.sh` make them, after KMSE's scripts; `.github/workflows/build.yml` runs the
   tests on all three systems and builds no release (the maintainer: "dont build the actual
   release just make the ci run tests"; until then it could make the packages when run by
@@ -81,7 +81,7 @@ from this repository; it and the other packages, and how they were checked, are 
 - Every package's files named `KOTOR-Font-Converter-<version>-<system>` (the maintainer:
   "call exes from now on KOTOR-Font-Converter-1.0.0-Windows-x64.exe and same for rest"):
   the Windows exe and zip (`-Windows-x64`), the macOS app, DMG and zip (`-macOS`), the
-  AppImages (`-Linux-x86_64`, `-Linux-aarch64`). Until then `KMRP Font Converter.exe`
+  AppImage (`-Linux-x86_64`; `-Linux-aarch64` too until it was dropped). Until then `KMRP Font Converter.exe`
   and `KMRP-Font-Converter-<version>-*`. The window's title and the macOS menu bar still
   say "KMRP Font Converter".
 - The tests run on macOS and Linux too, with KMRP's own fonts as inputs where Windows' are
@@ -89,8 +89,15 @@ from this repository; it and the other packages, and how they were checked, are 
   nothing written or the whole set, failing on any part of it (until then it demanded
   nothing, and failed on the CI's Windows machine, where the fonts were done before the
   window read the close).
-- **Not yet run:** the macOS app (type-checked for both architectures, not built), the Linux
-  window, the aarch64 AppImage. The x86_64 AppImage converted fonts under WSL's Ubuntu 20.04.
+- Linux: one AppImage, for x86_64 (the maintainer, 2026-11-09: "make linux one build for
+  this repo the x86_64 AppImage"). `build-linux.sh` has no `--arch` any more. *Corrected the
+  same day:* the rewrite first also made an aarch64 AppImage, from the request's "intel and
+  silicon", which was meant for the Mac; it was never run, and on a Steam Deck (x86_64) it
+  does not start ("Exec format error").
+- **Not yet run:** the macOS app (type-checked for both architectures, not built). The x86_64
+  AppImage converted fonts under WSL's Ubuntu 20.04, and on a Steam Deck's SteamOS (glibc
+  2.41, Wayland), where its window also opened and found Steam's KOTOR Override folder
+  (2026-11-09).
 
 **Added**
 
