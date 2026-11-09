@@ -32,8 +32,8 @@ looked at there: the HUD's numbers, the end credits, Menu Large.
 and linux (intel and silicon) appimage version"). One source now builds the Windows exe, a
 macOS app for Apple silicon and Intel, and Linux AppImages for x86_64 and aarch64. Fonts are
 read and the original game's letters hinted by the program itself instead of Windows'
-DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,514,176
-bytes, SHA-256 `6D12031699CC1DDEE5CEA50337A5A7F42791B21207D8F1C3D666107FF19940CB`. What
+DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,514,688
+bytes, SHA-256 `ACC63B25F48C770AB30DA8F490F8019A15CCE5B54505A6C59F87B93713DDA9E5`. What
 changed in what it writes is measured in section 9. **Not yet seen in the game:** any font
 the Rust program wrote; the game sightings above are of the C# program's fonts. **Not yet
 run:** the macOS app (no Mac here), the Linux window and the aarch64 AppImage.
@@ -98,7 +98,7 @@ original KOTOR and one for KMRP"), chosen in the Version box beside Convert:
 | --- | --- | --- |
 | Size | The Original HD Font's: its TXI header (fontheight, baselineheight, spacing, numchars) unchanged, six times the original fonts | The original game's own fonts': each TXI header is the game's line for line (`data/originals.txt`, since 2026-11-09), only `texturewidth` set to the atlas, with the game's CR LF line ends. The heights are 10, 12, 14, 16, 19 and 32 pixels, the HD sizes divided by six. Until 2026-11-09 the HD header with fontheight, baselineheight, spacingR and spacingB divided by six, which differed from the game's in one value: `fnt_console`'s spacingR, 0.01 against the game's 0.02 |
 | Letters | Drawn here from the outlines, exact-area coverage | Hinted by the font's own instructions (`LoadedFace::hinter` in `src/font.rs`: skrifa's TrueType and PostScript hinting, its automatic hinter for a TrueType font with none, FreeType's normal target), made 0.3 pixels wider sideways (`embolden_x` in `src/atlas.rs`, section 9), then filled by the converter's own rasteriser, each letter standing on a whole pixel, so text of 10 to 19 pixels is crisp. Where a font's hints cannot be run, the outlines unhinted, every letter alike. Until 2026-11-09 drawn by Windows (DirectWrite's GDI-classic greyscale); section 9 measures the difference |
-| Atlas | The size of KMRP 1.6's own HD atlas for that name (1024, 2048 or 4096): the letters in slot order where they fit, else packed tighter (`pack_tight`: the blank slots share one empty cell, the letters widest first); a larger atlas only where neither fits (none of the nine fonts the test converts, 2026-11-09). Until 2026-11-09 it doubled as soon as slot order did not fit | The size of the game's own atlas for that name (128, 256 or 512): slot order, else tight, else (as the game's own HUD font) tight with no gap between cells; a larger atlas only where the letters cannot fit even so (one font in the test: KMRP's own HD Console face's HUD letters, 1,128 pixels of cells where 128 square holds 1,024). Until 2026-11-09 from 64, doubled until the letters fit in slot order, which gave the game's size for 16 of the 17 and 256 for `fnt_console` |
+| Atlas | The size of KMRP 1.6's own HD atlas for that name (1024, 2048 or 4096): the letters in slot order where they fit, else packed tighter (`pack_tight`: the blank slots share one empty cell, the letters widest first); a larger atlas only where neither fits (none of the nine fonts the test converts, 2026-11-09). Until 2026-11-09 it doubled as soon as slot order did not fit | The size of the game's own atlas for that name (128, 256 or 512): slot order, else tight, else (as the game's own HUD font) tight with no gap between cells; a larger atlas only where the letters cannot fit even so (none of the nine fonts the test converts, since the HUD letters hold their ring inside them, section 9). Until 2026-11-09 from 64, doubled until the letters fit in slot order, which gave the game's size for 16 of the 17 and 256 for `fnt_console` |
 | In the game | KMRP fits each to its drawn size and offers them as **Modded Font** ([ingame-text-options.md](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/ingame-text-options.md) section 3) | The game draws them one texel to one pixel, as its own: the same size as the game's text, which is small on a modern screen |
 
 *Corrected 2026-11-08, the same day:* the first original-game build took ClearType's
@@ -111,7 +111,8 @@ Windows-1252 slots, no zero-wide glyph (a slot the font lacks keeps the HD Origi
 width, divided for the original game, and stays blank), ink moved inside its cell, 4 pixels
 between cells. The glyph box holds the font's ascent and descent or, where a letter of the
 game's text reaches further, that letter (Bahnschrift's caron over S and Z was cut off at
-the ascent). `fnt_console` gets the game's black ring, one original pixel wide.
+the ascent). `fnt_console` gets the game's black ring, one original pixel wide (six at the
+HD size), inside the letter's size since 2026-11-09 (section 9).
 
 **Refused** (2026-11-08, audit F4 to F6): a font without every letter A to Z and a to z
 (its text would be invisible in the game), with a message naming the missing letters; a
@@ -341,10 +342,10 @@ to the download from WSL. The macOS app was not made: that needs a Mac.
 
 | Package (1.0.0, Rust) | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `KMRP Font Converter.exe` | 6,514,176 | `6D12031699CC1DDEE5CEA50337A5A7F42791B21207D8F1C3D666107FF19940CB` |
-| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,616,040 | `852EDCB903A1A5BB86BB76C9A4174F547811B23DCB2D28F5A37192F2DD257F86` |
-| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,085,688 | `03274539E374BA5EDBA3517ADF6AC8CBBD495F1FABFFC71A38E887CBCC548C69` |
-| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,766,216 | `2F723C456B7FE88009D24117133AC7ADC8D41E882B4FE087D9BA5D4938E3FA2A` |
+| `KMRP Font Converter.exe` | 6,514,688 | `ACC63B25F48C770AB30DA8F490F8019A15CCE5B54505A6C59F87B93713DDA9E5` |
+| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,615,956 | `A307ACF9DE2871A17876C2DFBB85223DBFD54D710BC34F4188D3AE46AB7A9FF1` |
+| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,085,688 | `A8A81D6640EAEB267C04B822013B79FE9E7C3DA2C3F64C9B7431261D3DB115AC` |
+| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,766,216 | `E65F3928749A3AC5B0AB23A9B2B126CA10229EDD16CFDF3294C534D5B7C4A7F3` |
 
 The zip and the AppImages hold file times, so they differ at every build; the Windows exe
 inside does not. The exe is 7.7 times the C# one's 840,192 bytes: the window's toolkit, the
@@ -384,7 +385,7 @@ unchanged.
 ## 7. Verifying
 
 `python tests/Test-FontConverter.py` builds the program and runs it, on Windows, macOS or
-Linux (2026-11-09, the Rust exe `6D120316...` on Windows 11: all checks passed; 2026-11-08,
+Linux (2026-11-09, the Rust exe `ACC63B25...` on Windows 11: all checks passed; 2026-11-08,
 the C# exe: all passed). Nine inputs (Arial TTF, KMRP's CFF OTF, KMRP's collection, KMRP's
 TTF, Cambria's collection face, Bahnschrift's variable font, Georgia, and Arial as WOFF and
 WOFF2; KMRP's three added 2026-11-09 so that a machine without Windows' fonts has inputs,
@@ -445,7 +446,7 @@ The Rust program against the C# one (`81D4BD89...`), each converting the same th
 for all eleven tiles, both versions, into empty folders; compared file by file with a
 script in the scratch folder (TXI text byte for byte, TGA alpha pixel by pixel) and glyph by
 glyph (each cell cropped by its TXI coordinates, top-left aligned). Rust build
-`6D120316...`, unless a table names another.
+`ACC63B25...`, unless a table names another.
 
 **KMRP version: the same arithmetic, in KMRP 1.6's own file sizes.** The TXI files of the
 14 fonts outside the Journal tile are the C# program's byte for byte, for all three fonts.
@@ -558,11 +559,37 @@ cells, which is the step added before a larger atlas: tight packing with no gap,
 packs its own. The game's other fonts leave gaps (a 16-column grid) and are not changed by
 this: slot order with 4 pixels between cells still fits them. HUD text drawn back from
 Georgia's 128 atlas reads as from its 256 one, no letter reaching into the next. KMRP's own
-HD Console face cannot fit: its HUD letters need 1,128 pixels where 128 square holds 1,024,
-so its `fnt_console` is 256, and the test allows a larger atlas only where it computes the
-letters cannot fit. Where the game's fonts' `.txi` text came from: KMRP's copies end their
+HD Console face did not fit: its HUD letters needed 1,128 pixels where 128 square holds
+1,024, so its `fnt_console` was 256, until the ring was drawn inside the letter (below). The
+test allows a larger atlas only where it computes the letters cannot fit. Where the game's fonts' `.txi` text came from: KMRP's copies end their
 lines CR CR LF, as its script writes the game's CR LF text through Python's text mode on
 Windows; the converter writes CR LF. **Not yet seen in the game.**
+
+**The HUD letters hold their ring inside them** (2026-11-09, the maintainer, told the HUD
+letters were 2 pixels wider than the plain letters for their black ring: "then make it 2
+pixels smaller to account for the black border"). The game's own HUD letters are 8 by 16
+cells with their outline inside. The converter drew each letter at the glyph box's full
+height and made its cell two ring widths wider, the ring cut off at the box's top and
+bottom. Now each letter of `fnt_console` is drawn one ring width smaller on every side
+(`inset` in `write`, `src/atlas.rs`): 14 pixels tall in the 16 of the original game (84 in
+the 96 at KMRP's HD size), the ring filling the pixel round it; its cell is the plain
+letter's advance, wider only where the letter and its ring need more. The tile's preview
+draws it the same way (`line`). For both versions; the other 16 fonts have no ring and are
+not changed. Measured over slots 33 to 126 (the 94 letters and signs), the cells' total
+width, and the atlas, for the original game:
+
+| Font | Before | After |
+| --- | --- | --- |
+| Georgia | 977 pixels, 128 square | 864, 128 square |
+| Arial | 939, 128 square | 867, 128 square |
+| KMRP Dialogue OTF | 995, 128 square | 835, 128 square |
+| KMRP's own HD Console face | 1,128, 256 square | 940, 128 square |
+
+Its digits are now 8 to 10 pixels wide, against the game's 8 (Georgia's 0, 1, 2: 10, 8, 9;
+before, 11, 8, 10). At KMRP's size the HUD atlases stay 1024 square, KMRP's, and the TXI of
+`fnt_console` differs from the C# program's, its cells narrower. Seen in a picture of "XP
+4,500 1,250" drawn from the atlases on grey, 6 times: every letter in its whole ring, the
+letter and ring the plain letter's size. **Not yet seen in the game.**
 
 **What else changed with the rewrite**, all in sections 1, 3, 5 and 6: the window is egui's
 (the same layout; the 16:9 drag gone; fitted to the screen as KMSE); `--convert --exit`

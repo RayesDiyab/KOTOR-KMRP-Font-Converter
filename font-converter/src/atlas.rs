@@ -321,18 +321,29 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
         Some(h) if game => round(h * 100.0) as i32,
         _ => round(reference.glyph_height() as f64 / divisor as f64) as i32,
     };
-    let (top, bottom) = glyph_box(face);
-    let scale = height as f32 / (top + bottom).max(1.0);
-    let em = face.units_per_em as f32 * scale;
-    let ascent = top * scale;
-    // The original game's letters stand on a whole pixel, where hinting puts them.
-    let baseline = roundf(ascent) as i32;
     let count = match header_field(&reference.original_header, "numchars") {
         Some(n) if game => n as usize,
         _ => reference.num_chars(),
     };
     let ring = outlined(&reference.resref);
     let ring_width = ring.unwrap_or(0.0) / divisor as f32;
+    // An outlined font's letter is drawn its ring's width smaller on every side, so the
+    // letter and its ring together are the size the plain letter would be, as the game's own
+    // HUD letters hold their outline inside their cell (2026-11-09, the maintainer: "make it
+    // 2 pixels smaller to account for the black border"). Until then the letter was drawn
+    // full size and its cell made 2 ring widths wider, and the ring cut at the box's top
+    // and bottom.
+    let inset = if ring.is_some() { ring_width.ceil() } else { 0.0 };
+    let (top, bottom) = glyph_box(face);
+    // The plain letter's scale, which gives the advances...
+    let scale = height as f32 / (top + bottom).max(1.0);
+    // ...and the scale the letter is drawn at, inside its ring.
+    let drawn = (height as f32 - 2.0 * inset).max(1.0) / (top + bottom).max(1.0);
+    let em = face.units_per_em as f32 * drawn;
+    let ascent = inset + top * drawn;
+    // The original game's letters stand on a whole pixel, where hinting puts them.
+    let baseline = roundf(ascent) as i32;
+    let ring_room = (2.0 * inset) as i32;
 
     let mut widths = vec![0i32; count];
     let mut offsets = vec![0f32; count];
@@ -354,8 +365,8 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
                         let contours = embolden_x(&contours, widen);
                         if let Some(ink) = hinted_ink(&contours) {
                             let left = ink.left.min(0);
-                            advance = advance.max(ink.right - left);
-                            offsets[i] = -left as f32;
+                            advance = advance.max(ink.right - left + ring_room);
+                            offsets[i] = -left as f32 + inset;
                             hinted[i] = Some(ink);
                         }
                     }
@@ -381,11 +392,11 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
                 }
                 if min_x <= max_x {
                     let left = min_x.min(0.0);
-                    let right = max_x - left;
+                    let right = max_x - left + 2.0 * inset;
                     if right > advance as f32 {
                         advance = right.ceil() as i32;
                     }
-                    offsets[i] = -left;
+                    offsets[i] = -left + inset;
                     outlines[i] = Some(outline);
                 }
             }
@@ -395,12 +406,6 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
                 Some(&w) => round(w as f64 / divisor as f64) as i32,
                 None => height / 3,
             });
-        }
-        // An outlined font's letter gets its ring's width on both sides, so the ring is never
-        // cut by the cell.
-        if ring.is_some() {
-            offsets[i] += ring_width.ceil();
-            advance += 2 * ring_width.ceil() as i32;
         }
         if advance > MAX_SIZE {
             return Err(FontError("A letter of this font is too wide for the game's fonts.".into()));
@@ -702,9 +707,11 @@ pub struct LineImage {
 /// descent fitted into it as the atlases are, in `colour` over its black ring, if any.
 pub fn line(face: &LoadedFace, text: &str, box_height: f32, colour: [u8; 3], ring_radius: f32) -> LineImage {
     let (top, bottom) = glyph_box(face);
-    let scale = box_height / (top + bottom).max(1.0);
+    // With a ring, the letter drawn inside it, as the atlas has it (write).
+    let inset = if ring_radius > 0.0 { ring_radius.ceil() } else { 0.0 };
+    let scale = (box_height - 2.0 * inset).max(1.0) / (top + bottom).max(1.0);
     let em = face.units_per_em as f32 * scale;
-    let ascent = top * scale;
+    let ascent = inset + top * scale;
     let mut glyphs: Vec<(f32, Contours)> = Vec::new();
     let (mut pen, mut min_x, mut max_x) = (0f32, 0f32, 1f32);
     for c in text.chars() {
@@ -719,7 +726,8 @@ pub fn line(face: &LoadedFace, text: &str, box_height: f32, colour: [u8; 3], rin
             max_x = max_x.max(pen + p.x);
         }
         glyphs.push((pen, outline));
-        pen += face.advance(glyph) as f32 * scale;
+        // spaced by the plain letter's advance, as the atlas's cells are
+        pen += face.advance(glyph) as f32 * box_height / (top + bottom).max(1.0);
     }
     max_x = max_x.max(pen);
     let pad = ring_radius.ceil() as i32 + 1;

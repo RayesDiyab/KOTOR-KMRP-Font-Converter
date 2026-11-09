@@ -175,7 +175,8 @@ def check_set(folder, version, label, refs):
             game = GAMES[name]
             # Larger only where the letters cannot fit the game's size even side by side
             # with no gap: their cells' total width more than its rows hold (KMRP's own HD
-            # Console face's HUD letters, 1,128 pixels against 1,024 in 128 square).
+            # Console face's HUD letters were, 1,128 pixels against 1,024 in 128 square,
+            # until they held their ring inside them; none of the nine fonts is now).
             height = cells[ord("A")][1] - cells[ord("A")][3]
             inked = {c for i, c in enumerate(cells) if i > 32 and round((c[2] - c[0]) * w) > 0}
             need = sum(round((x1 - x0) * w) for x0, _, x1, _ in inked)
