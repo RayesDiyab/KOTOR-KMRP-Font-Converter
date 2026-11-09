@@ -86,8 +86,8 @@ does not change what the text says, or the size of the game's text in the origin
 ending from any `*.tpc.before-font-converter`. The names are listed in the readme that
 comes with the program, [release/README.txt](font-converter/release/README.txt).
 
-**The 1.0.0 Windows program** is 6,514,688 bytes, SHA-256
-`AF794C61AEA57E2A0A8022289E4A68D0E5CCB509DBCDD69262150C08FCFDC92B`, built
+**The 1.0.0 Windows program** is 11,238,912 bytes, SHA-256
+`DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348`, built
 deterministically: the same sources give the same bytes (a rebuild from clean gave the
 same SHA-256, 2026-11-09). It is **not signed**, so Windows SmartScreen and some antivirus
 programs may warn; it has not yet been scanned on VirusTotal. The macOS app is signed ad

@@ -282,20 +282,39 @@ pub fn run(args: Args) -> i32 {
     if let Some(icon) = icon() {
         viewport = viewport.with_icon(Arc::new(icon));
     }
-    let options = eframe::NativeOptions { viewport, centered: true, ..Default::default() };
-    let result = eframe::run_native(
-        "KMRP Font Converter",
-        options,
-        Box::new(move |cc| {
-            theme::install_fonts(&cc.egui_ctx);
-            Ok(Box::new(App::new(cc.egui_ctx.clone(), args, code)))
-        }),
-    );
-    if let Err(e) = result {
-        eprintln!("The window could not be opened: {e}");
-        return 1;
+    // The window is drawn through wgpu (DirectX 12 on Windows, with Windows' own software
+    // renderer where there is no graphics card; Metal on macOS; Vulkan or OpenGL on Linux),
+    // and where wgpu cannot start, through OpenGL 2 (glow), the only renderer until
+    // 2026-11-09. A Windows PC without a graphics driver, as GitHub's test machines are, has
+    // only OpenGL 1.1, and the window did not open there at all.
+    let args = Arc::new(std::sync::Mutex::new(Some(args)));
+    let mut errors = Vec::new();
+    for renderer in [eframe::Renderer::Wgpu, eframe::Renderer::Glow] {
+        let Some(_) = args.lock().ok().and_then(|a| a.as_ref().map(|_| ())) else { break };
+        let options = eframe::NativeOptions { viewport: viewport.clone(), centered: true, renderer, ..Default::default() };
+        let (args, code) = (args.clone(), code.clone());
+        let result = eframe::run_native(
+            "KMRP Font Converter",
+            options,
+            Box::new(move |cc| {
+                theme::install_fonts(&cc.egui_ctx);
+                let args = args.lock().ok().and_then(|mut a| a.take()).unwrap_or_default();
+                Ok(Box::new(App::new(cc.egui_ctx.clone(), args, code)))
+            }),
+        );
+        match result {
+            Ok(()) => return exit_code.load(Ordering::SeqCst),
+            Err(e) => errors.push(format!("{renderer:?}: {e}")),
+        }
     }
-    exit_code.load(Ordering::SeqCst)
+    // Neither could draw: said where it is seen (a Windows program has no console).
+    let text = format!(
+        "The window could not be opened: this computer's graphics driver offers neither DirectX 12, Metal or Vulkan nor OpenGL 2.\n\n{}",
+        errors.join("\n")
+    );
+    eprintln!("{text}");
+    rfd::MessageDialog::new().set_title("KMRP Font Converter").set_description(&text).set_level(rfd::MessageLevel::Error).show();
+    1
 }
 
 pub struct App {

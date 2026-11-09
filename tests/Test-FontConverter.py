@@ -167,7 +167,16 @@ def check_set(folder, version, label, refs):
             # The atlas KMRP 1.6's own HD font has (2026-11-09: the maintainer wants the
             # exact size font files KMRP 1.6 uses), and every header line but texturewidth
             # as its TXI has it.
-            ok &= check(w == ref["atlas"], f"{label}: {name} atlas {w}, KMRP's is {ref['atlas']}")
+            # Larger only where the letters cannot fit KMRP's size even packed tight with
+            # KMRP's 4 pixels between them: their cells and gaps more than its rows hold
+            # (2026-11-09, seen in CI on macOS and Linux: KMRP's own Menu face, made into
+            # WOFF there, needs 12,575 pixels for the Journal's letters where 1024 holds 11,264).
+            height = round((cells[ord("A")][1] - cells[ord("A")][3]) * w)
+            inked = {c for i, c in enumerate(cells) if i > 32 and round((c[2] - c[0]) * w) > 0}
+            need = sum(round((x1 - x0) * w) + 4 for x0, _, x1, _ in inked)
+            room = ((ref["atlas"] + 4) // max(1, height + 4)) * ref["atlas"]
+            wanted = ref["atlas"] if need <= room else ref["atlas"] * 2
+            ok &= check(w == wanted, f"{label}: {name} atlas {w}, KMRP's is {ref['atlas']} (letters {need} px, room {room})")
             for key, value in ref.items():
                 if key not in ("atlas", "texturewidth"):
                     ok &= check(abs(float(head[key]) - value) < 1e-6, f"{label}: {name} {key} {head.get(key)}, KMRP's is {value}")

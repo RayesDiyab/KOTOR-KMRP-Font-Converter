@@ -19,8 +19,8 @@ Nothing has been released from this repository yet: no tag, no GitHub release
 ### KMRP Font Converter 1.0.0
 
 To be released on the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
-maintainer, 2026-11-08). The Windows exe is 6,514,688 bytes, SHA-256
-`AF794C61AEA57E2A0A8022289E4A68D0E5CCB509DBCDD69262150C08FCFDC92B`, built deterministically
+maintainer, 2026-11-08). The Windows exe is 11,238,912 bytes, SHA-256
+`DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348`, built deterministically
 from this repository; it and the other packages, and how they were checked, are in
 [font-converter.md](font-converter/docs/font-converter.md) sections 6 and 7.
 
@@ -40,6 +40,15 @@ from this repository; it and the other packages, and how they were checked, are 
   2048 square, 16 MB each, where KMRP's are 1024, 4 MB: where the letters do not fit in
   slot order, the blank slots now share one empty cell and the letters are packed widest
   first. All nine fonts the test converts fit KMRP's sizes; the test now checks it.
+- The window drawn through wgpu (DirectX 12, with Windows' software renderer where there is
+  no graphics driver; Metal; Vulkan), with OpenGL 2 as the fallback, and a message box where
+  neither works. The first CI run found the window did not open on a Windows machine
+  without a graphics driver, where only OpenGL 1.1 exists.
+- Microsoft's C runtime linked into the Windows exe, so it starts without the Visual C++
+  Redistributable; the exe is 11.2 MB for both changes (6.5 MB before).
+- The test's KMRP-size check allows a larger atlas only where a font's letters cannot fit
+  KMRP's size (KMRP's own Menu face's Journal letters, which the CI run on macOS and Linux
+  converts); until then it demanded KMRP's size for any font.
 - The original-game version the same way, after the game's own fonts (the maintainer:
   "should match size, etc., and spacing of the original game"): each atlas the game's size
   (the HUD font 128 square, as the game's, where it was 256), each TXI header the game's line

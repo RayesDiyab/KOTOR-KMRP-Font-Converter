@@ -42,7 +42,7 @@ try {
     # may have spaces; the /Brepro of .cargo\config.toml goes with them, as these replace it.
     $cargoHome = if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $env:USERPROFILE ".cargo" }
     $us = [char]0x1f
-    $env:CARGO_ENCODED_RUSTFLAGS = "--remap-path-prefix=$here=/kmrp-font-converter$us--remap-path-prefix=$cargoHome=/cargo$us-C${us}link-arg=/Brepro"
+    $env:CARGO_ENCODED_RUSTFLAGS = "--remap-path-prefix=$here=/kmrp-font-converter$us--remap-path-prefix=$cargoHome=/cargo$us-C${us}link-arg=/Brepro$us-C${us}target-feature=+crt-static"
     Remove-Item Env:RUSTFLAGS -ErrorAction SilentlyContinue
 
     if (-not $NoTests) {

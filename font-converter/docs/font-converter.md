@@ -32,8 +32,8 @@ looked at there: the HUD's numbers, the end credits, Menu Large.
 and linux (intel and silicon) appimage version"). One source now builds the Windows exe, a
 macOS app for Apple silicon and Intel, and Linux AppImages for x86_64 and aarch64. Fonts are
 read and the original game's letters hinted by the program itself instead of Windows'
-DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,514,688
-bytes, SHA-256 `AF794C61AEA57E2A0A8022289E4A68D0E5CCB509DBCDD69262150C08FCFDC92B`. What
+DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 11,238,912
+bytes, SHA-256 `DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348`. What
 changed in what it writes is measured in section 9. **Not yet seen in the game:** any font
 the Rust program wrote; the game sightings above are of the C# program's fonts. **Not yet
 run:** the macOS app (no Mac here), the Linux window and the aarch64 AppImage.
@@ -256,7 +256,28 @@ Slot numbers, counted from the 10.0.26100.0 SDK headers and checked again by the
 `IDWriteFontResource::CreateFontFace` 13; `IDWriteGlyphRunAnalysis::GetAlphaTextureBounds`
 3, `CreateAlphaTexture` 4.
 
-**macOS and Linux** (2026-11-09). The window is egui's (eframe, OpenGL through glow), the
+**How the window is drawn, and what the exe needs** (2026-11-09, found by the first CI run).
+The window is drawn through wgpu (DirectX 12 on Windows, which falls back to Windows' own
+software renderer, WARP, where there is no graphics driver; Metal on macOS; Vulkan or OpenGL
+on Linux), and where wgpu cannot start, through OpenGL 2 (glow); where neither can, a
+message box says so (`run` in `src/app.rs`). Until then OpenGL 2 was the only renderer, and on
+GitHub's Windows test machine, which has no graphics driver and so only Windows' OpenGL 1.1,
+the window never opened (the close-while-converting check: "no window found"; every
+conversion there passed). Checked on the maintainer's PC: the window opens through wgpu
+(DirectX 12) and draws as before (a screenshot at 1600x900); with wgpu told to look only for
+Metal (`WGPU_BACKEND=metal`), so that it fails, it opens through OpenGL instead. Not checked:
+a PC without a graphics driver (the CI run after this change is that check).
+
+Microsoft's C runtime is linked into the exe (`crt-static`, `.cargo/config.toml` and
+`build.ps1`): until then the exe needed `VCRUNTIME140.dll` and the `api-ms-win-crt-*` DLLs,
+which a Windows without the Visual C++ Redistributable may not have; its imports are now only
+Windows' own DLLs (listed with `objdump -p`). *Corrected on the way:* the first build with the
+message box would not start at all (`0xC0000139`, an entry point not found): the file
+dialogs' "common-controls-v6" option imports `TaskDialogIndirect`, which only version 6 of
+Windows' common controls has, and an exe gets that only by a manifest this one does not
+have. The option is off; the message box is Windows' plain one.
+
+**macOS and Linux** (2026-11-09). The window is egui's (eframe), the
 same on every system; its text is set in the two KMRP fonts, with egui's own fonts for the
 signs they lack and for the folder's path (Hack). The file pickers are the system's own (rfd:
 Windows' dialogs, macOS's panels, and on Linux the desktop's portal). The tick, the clear
@@ -342,14 +363,16 @@ to the download from WSL. The macOS app was not made: that needs a Mac.
 
 | Package (1.0.0, Rust) | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `KOTOR-Font-Converter-1.0.0-Windows-x64.exe` | 6,514,688 | `AF794C61AEA57E2A0A8022289E4A68D0E5CCB509DBCDD69262150C08FCFDC92B` |
-| `KOTOR-Font-Converter-1.0.0-Windows-x64.zip` | 3,616,031 | `75251AC46817AE96A569611A7A652581E25D633F186E86BB899D2B220F47DE3C` |
-| `KOTOR-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,085,688 | `452F9BF6CC61D80FF0B0EB06FC80343FAD2212E4766B80AE2A34ED22A9211738` |
-| `KOTOR-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,766,216 | `CEFEA2FDE8E8BD99453748817844596FB55712C3D0098C2E0D414B614E33BE71` |
+| `KOTOR-Font-Converter-1.0.0-Windows-x64.exe` | 11,238,912 | `DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348` |
+| `KOTOR-Font-Converter-1.0.0-Windows-x64.zip` | 5,663,699 | `A08782C58CF071253724BD4BB7E17E7560DB239D78AEB6635708A4F4E443B6D7` |
+| `KOTOR-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 6,707,704 | `503466BEA4A8556EC59C116DBE304BE50F067297B8ABD68B0BADE0E0BC298201` |
+| `KOTOR-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 6,289,928 | `437F78095C31BAE3FABEB262F553EB9DCC140F4661936BD3ABA6A8C3315E3DF0` |
 
 The zip and the AppImages hold file times, so they differ at every build; the Windows exe
-inside does not. The exe is 7.7 times the C# one's 840,192 bytes: the window's toolkit, the
-font reader and the two window fonts are now inside it rather than in Windows.
+inside does not. The exe is 13.4 times the C# one's 840,192 bytes: the window's toolkit with
+its two renderers, the font reader, the C runtime and the two window fonts are now inside it
+rather than in Windows (6.5 MB with the OpenGL renderer alone and Microsoft's C runtime
+outside, until 2026-11-09, section 3).
 
 *Superseded 2026-11-09:* until the Rust rewrite, `build.ps1` compiled the C# sources with
 Roslyn's `csc` from Visual Studio or its Build Tools (found with `vswhere`) with
@@ -385,7 +408,7 @@ unchanged.
 ## 7. Verifying
 
 `python tests/Test-FontConverter.py` builds the program and runs it, on Windows, macOS or
-Linux (2026-11-09, the Rust exe `AF794C61...` on Windows 11: all checks passed; 2026-11-08,
+Linux (2026-11-09, the Rust exe `DF4B6178...` on Windows 11: all checks passed; 2026-11-08,
 the C# exe: all passed). Nine inputs (Arial TTF, KMRP's CFF OTF, KMRP's collection, KMRP's
 TTF, Cambria's collection face, Bahnschrift's variable font, Georgia, and Arial as WOFF and
 WOFF2; KMRP's three added 2026-11-09 so that a machine without Windows' fonts has inputs,
@@ -446,7 +469,7 @@ The Rust program against the C# one (`81D4BD89...`), each converting the same th
 for all eleven tiles, both versions, into empty folders; compared file by file with a
 script in the scratch folder (TXI text byte for byte, TGA alpha pixel by pixel) and glyph by
 glyph (each cell cropped by its TXI coordinates, top-left aligned). Rust build
-`AF794C61...`, unless a table names another.
+`DF4B6178...`, unless a table names another.
 
 **KMRP version: the same arithmetic, in KMRP 1.6's own file sizes.** The TXI files of the
 14 fonts outside the Journal tile are the C# program's byte for byte, for all three fonts.
@@ -488,7 +511,16 @@ bytes smaller because KMRP's own copies of those three end their lines with CR L
 other 14, like the converter's, with LF alone. Text read back from the new
 1024 Journal atlases by their TXI coordinates draws as from the 2048 ones (Georgia, Arial and
 KMRP's Dialogue OTF, "Find Bastila, then a way off Taris."). A font wide enough not to fit
-even so still gets a larger atlas; none of the nine needed one. **Not yet seen in the game.**
+even so still gets a larger atlas; none of the nine needed one on Windows. **Not yet seen in
+the game.**
+
+*Corrected 2026-11-09, by the first CI run:* on macOS and Linux, where Windows' Arial is not
+there, the test makes its WOFF and WOFF2 inputs from KMRP's own Menu face, and that face's
+Journal letters cannot fit 1024: 12,575 pixels of cells and gaps where its 11 rows hold
+11,264 (11,687 even with no gaps). The converter rightly made them 2048 and the test, which
+demanded KMRP's size whatever the font, failed there. It now allows the next size only where
+it computes the letters cannot fit, as its original-game check does; run on Windows with the
+WOFF made from that face, it passed.
 
 **Original-game version: the hinting is the font's, no longer Windows'.** DirectWrite's
 GDI-classic drawing is Windows' own and not available elsewhere; the Rust program hints each
@@ -593,5 +625,5 @@ letter and ring the plain letter's size. **Not yet seen in the game.**
 
 **What else changed with the rewrite**, all in sections 1, 3, 5 and 6: the window is egui's
 (the same layout; the 16:9 drag gone; fitted to the screen as KMSE); `--convert --exit`
-opens no window; WOFF files are unpacked in memory; the program is 6.5 MB instead of 0.8 MB;
+opens no window; WOFF files are unpacked in memory; the program is 11.2 MB instead of 0.8 MB;
 macOS and Linux builds.

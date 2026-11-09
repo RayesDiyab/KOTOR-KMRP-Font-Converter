@@ -2,11 +2,15 @@
 [build]
 target-dir = "build/target"
 
-# The linker's time stamp in the program's header becomes a hash of its contents (/Brepro),
+# /Brepro: the linker's time stamp in the program's header becomes a hash of its contents,
 # so two builds of the same sources are byte for byte the same, as the C# program's
 # /deterministic build was (audit R2).
+# crt-static: Microsoft's C runtime linked into the exe (2026-11-09), so it starts on a
+# Windows without the Visual C++ Redistributable; until then it needed VCRUNTIME140.dll,
+# which a clean Windows may not have (the C# program needed nothing but .NET Framework).
+# build.ps1 passes the same flags through CARGO_ENCODED_RUSTFLAGS, which replaces these.
 [target.x86_64-pc-windows-msvc]
-rustflags = ["-C", "link-arg=/Brepro"]
+rustflags = ["-C", "link-arg=/Brepro", "-C", "target-feature=+crt-static"]
 
 [target.aarch64-pc-windows-msvc]
-rustflags = ["-C", "link-arg=/Brepro"]
+rustflags = ["-C", "link-arg=/Brepro", "-C", "target-feature=+crt-static"]

@@ -19,7 +19,8 @@ What you need
       silicon or Intel             app for both
     Linux, 64-bit Intel or AMD     KOTOR-Font-Converter-<version>-Linux-x86_64.AppImage
     Linux, 64-bit ARM              KOTOR-Font-Converter-<version>-Linux-aarch64.AppImage
-  A graphics driver with OpenGL 2 or newer, as every desktop has.
+  The window draws through DirectX 12 (Windows), Metal (macOS) or Vulkan, else OpenGL 2;
+  a Windows PC without a graphics driver draws it with Windows' own software renderer.
 - KOTOR 1. For the KMRP version, KMRP 1.6.0 or later. On macOS and Linux the game is the
   Windows game run through Steam's Proton, CrossOver or Wine: the fonts are for its Override
   folder. (KMRP is for the Windows game.)
