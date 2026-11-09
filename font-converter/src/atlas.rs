@@ -372,9 +372,14 @@ pub fn write(face: &LoadedFace, reference: &Reference, folder: &Path, target: Ta
     }
 
     // Powers of two: the original game's own atlases are, and older drivers want them.
+    // For KMRP, the atlas is KMRP 1.6's own HD font's size (2026-11-09, the maintainer: "the
+    // font converter needs to give the exact size font files for kmrp that kmrp 1.6 currently
+    // uses"): the letters in slot order where they fit, as before; else packed tighter
+    // (pack_tight); a larger atlas only when even that does not fit.
     let mut size = if original { 64 } else { 64.max(reference.atlas_width) };
+    let blank: Vec<bool> = (0..count).map(|i| hinted[i].is_none() && outlines[i].is_none()).collect();
     let positions = loop {
-        if let Some(p) = pack(&widths, height, size) {
+        if let Some(p) = pack(&widths, height, size).or_else(|| pack_tight(&widths, &blank, height, size)) {
             break p;
         }
         size *= 2;
@@ -461,6 +466,52 @@ pub fn spread(cell: &[u8], w: usize, h: usize, radius: f32) -> Vec<u8> {
         }
     }
     out
+}
+
+/// The cells packed tighter, for a set that does not fit `size` in slot order: every blank
+/// slot (a control code, an undefined byte, a space: no ink) points at one empty cell as wide
+/// as the widest of them, each keeping its own width, so the game spaces text as before; and
+/// the cells go widest first into the first row with room (first-fit decreasing), so rows end
+/// with less left over. The game reads each slot's place from the TXI, in any order.
+fn pack_tight(widths: &[i32], blank: &[bool], height: i32, size: i32) -> Option<Vec<(i32, i32)>> {
+    let blank_width = (0..widths.len()).filter(|&i| blank[i]).map(|i| widths[i]).max();
+    // The items to place: each inked slot, and the one shared blank cell (index None).
+    let mut items: Vec<(i32, Option<usize>)> = (0..widths.len()).filter(|&i| !blank[i]).map(|i| (widths[i], Some(i))).collect();
+    if let Some(w) = blank_width {
+        items.push((w, None));
+    }
+    items.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+    let mut rows: Vec<i32> = Vec::new(); // each row's next free x
+    let mut positions = vec![(0, 0); widths.len()];
+    let mut blank_at = (0, 0);
+    for (width, slot) in items {
+        if width > size {
+            return None;
+        }
+        let row = match rows.iter().position(|&x| x + width + PADDING <= size) {
+            Some(r) => r,
+            None => {
+                let r = rows.len();
+                if r as i32 * (height + PADDING) + height > size {
+                    return None;
+                }
+                rows.push(0);
+                r
+            }
+        };
+        let at = (rows[row], row as i32 * (height + PADDING));
+        rows[row] += width + PADDING;
+        match slot {
+            Some(i) => positions[i] = at,
+            None => blank_at = at,
+        }
+    }
+    for i in 0..widths.len() {
+        if blank[i] {
+            positions[i] = blank_at;
+        }
+    }
+    Some(positions)
 }
 
 fn pack(widths: &[i32], height: i32, size: i32) -> Option<Vec<(i32, i32)>> {
@@ -772,6 +823,28 @@ mod tests {
             let max = xs.iter().copied().fold(f32::MIN, f32::max);
             assert!((min - 1.0).abs() < 1e-5 && (max - 3.3).abs() < 1e-5, "{xs:?}");
             assert_eq!(ys, square[0].iter().map(|p| p.y).collect::<Vec<f32>>());
+        }
+    }
+
+    #[test]
+    fn tight_packing_shares_blanks() {
+        // 10 blank slots 16 wide and 6 letters 50 wide, rows 30 high in a 128 atlas, which
+        // holds 3 rows: in slot order the blanks take 2 rows and the letters 3 more; tight,
+        // the letters go two to a row and the one shared blank cell beside them.
+        let mut widths = vec![16; 10];
+        widths.extend([50; 6]);
+        let blank: Vec<bool> = (0..16).map(|i| i < 10).collect();
+        assert!(pack(&widths, 30, 128).is_none());
+        let p = pack_tight(&widths, &blank, 30, 128).expect("fits tight");
+        // every blank slot at one place; letters apart, inside the atlas, 4 between
+        assert!(p[..10].iter().all(|&q| q == p[0]));
+        assert!(p[0].0 + 16 + PADDING <= 128 && p[0].1 + 30 <= 128);
+        for i in 10..16 {
+            assert!(p[i].0 + 50 + PADDING <= 128 && p[i].1 + 30 <= 128);
+            assert!(p[i].1 != p[0].1 || p[i].0 + 50 + PADDING <= p[0].0 || p[0].0 + 16 + PADDING <= p[i].0);
+            for j in i + 1..16 {
+                assert!(p[i].1 != p[j].1 || (p[i].0 - p[j].0).abs() >= 50 + PADDING);
+            }
         }
     }
 

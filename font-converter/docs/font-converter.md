@@ -32,8 +32,8 @@ looked at there: the HUD's numbers, the end credits, Menu Large.
 and linux (intel and silicon) appimage version"). One source now builds the Windows exe, a
 macOS app for Apple silicon and Intel, and Linux AppImages for x86_64 and aarch64. Fonts are
 read and the original game's letters hinted by the program itself instead of Windows'
-DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,497,280
-bytes, SHA-256 `AB195B7AA8C84F6A3B7F170CB49E823A3E858668E8A4A5A2B09775DC7AD5F9EF`. What
+DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 6,505,984
+bytes, SHA-256 `C8809F9D2B89A9D9F56E3FB8149F39276730B8CBEE9490386572F283CFB7F758`. What
 changed in what it writes is measured in section 9. **Not yet seen in the game:** any font
 the Rust program wrote; the game sightings above are of the C# program's fonts. **Not yet
 run:** the macOS app (no Mac here), the Linux window and the aarch64 AppImage.
@@ -98,7 +98,7 @@ original KOTOR and one for KMRP"), chosen in the Version box beside Convert:
 | --- | --- | --- |
 | Size | The Original HD Font's: its TXI header (fontheight, baselineheight, spacing, numchars) unchanged, six times the original fonts | The original fonts': fontheight, baselineheight, spacingR and spacingB divided by six. Each divides exactly (10, 12, 14, 16, 19 and 32 pixels), and `Test-FontConverter.py` finds them equal to the game's own TXI values |
 | Letters | Drawn here from the outlines, exact-area coverage | Hinted by the font's own instructions (`LoadedFace::hinter` in `src/font.rs`: skrifa's TrueType and PostScript hinting, its automatic hinter for a TrueType font with none, FreeType's normal target), made 0.3 pixels wider sideways (`embolden_x` in `src/atlas.rs`, section 9), then filled by the converter's own rasteriser, each letter standing on a whole pixel, so text of 10 to 19 pixels is crisp. Where a font's hints cannot be run, the outlines unhinted, every letter alike. Until 2026-11-09 drawn by Windows (DirectWrite's GDI-classic greyscale); section 9 measures the difference |
-| Atlas | Starts at the HD atlas's width, doubles until the letters fit | Starts at 64, doubles: a power of two like the game's own |
+| Atlas | The size of KMRP 1.6's own HD atlas for that name (1024, 2048 or 4096): the letters in slot order where they fit, else packed tighter (`pack_tight`: the blank slots share one empty cell, the letters widest first); a larger atlas only where neither fits (none of the nine fonts the test converts, 2026-11-09). Until 2026-11-09 it doubled as soon as slot order did not fit | Starts at 64, doubles: a power of two like the game's own; packed the same way |
 | In the game | KMRP fits each to its drawn size and offers them as **Modded Font** ([ingame-text-options.md](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/docs/ingame-text-options.md) section 3) | The game draws them one texel to one pixel, as its own: the same size as the game's text, which is small on a modern screen |
 
 *Corrected 2026-11-08, the same day:* the first original-game build took ClearType's
@@ -341,10 +341,10 @@ to the download from WSL. The macOS app was not made: that needs a Mac.
 
 | Package (1.0.0, Rust) | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `KMRP Font Converter.exe` | 6,497,280 | `AB195B7AA8C84F6A3B7F170CB49E823A3E858668E8A4A5A2B09775DC7AD5F9EF` |
-| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,608,877 | `D86D087DD5B7B8212653C09AD4DFC64B164C613D43A611FC6AA063D943E15F43` |
-| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,081,592 | `7B413105BB8F055BBB9010A1EC3E7588EDEB1642A75CEDBE7FCA622313B26687` |
-| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,762,120 | `78D1622F46F1407802F634CB6EE2B37F7CDA0930FD034EBC0C51328D173F00C7` |
+| `KMRP Font Converter.exe` | 6,505,984 | `C8809F9D2B89A9D9F56E3FB8149F39276730B8CBEE9490386572F283CFB7F758` |
+| `KMRP-Font-Converter-1.0.0-Windows-x64.zip` | 3,613,879 | `69162478F7A8D0D3356A0DE3A990F619AEEAF926D94D598B689122E8F9A8D381` |
+| `KMRP-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 5,081,592 | `CE601F37D20CF35BD0E2256569FCC836D545DADCED48A17F219D64E3D5AA0A39` |
+| `KMRP-Font-Converter-1.0.0-Linux-aarch64.AppImage` | 4,766,216 | `0B6D7649253E17A313C83778C80BBEC8D8CD87DD1C4BD556AD1A3FBA30BFEEB0` |
 
 The zip and the AppImages hold file times, so they differ at every build; the Windows exe
 inside does not. The exe is 7.7 times the C# one's 840,192 bytes: the window's toolkit, the
@@ -384,7 +384,7 @@ unchanged.
 ## 7. Verifying
 
 `python tests/Test-FontConverter.py` builds the program and runs it, on Windows, macOS or
-Linux (2026-11-09, the Rust exe `AB195B7A...` on Windows 11: all checks passed; 2026-11-08,
+Linux (2026-11-09, the Rust exe `C8809F9D...` on Windows 11: all checks passed; 2026-11-08,
 the C# exe: all passed). Nine inputs (Arial TTF, KMRP's CFF OTF, KMRP's collection, KMRP's
 TTF, Cambria's collection face, Bahnschrift's variable font, Georgia, and Arial as WOFF and
 WOFF2; KMRP's three added 2026-11-09 so that a machine without Windows' fonts has inputs,
@@ -445,21 +445,49 @@ The Rust program against the C# one (`81D4BD89...`), each converting the same th
 for all eleven tiles, both versions, into empty folders; compared file by file with a
 script in the scratch folder (TXI text byte for byte, TGA alpha pixel by pixel) and glyph by
 glyph (each cell cropped by its TXI coordinates, top-left aligned). Rust build
-`AB195B7A...`.
+`C8809F9D...`, unless a table names another.
 
-**KMRP version: the same arithmetic.** The TXI files are the C# program's byte for byte for
-Georgia and KMRP's Dialogue OTF, all 17 each. For Arial, 14 of 17 are; the other three
-(`fnt_creditsa`, `fnt_d16x16a`, `fnt_dialog16x16`, the Journal tile's, one size) differ in
-one cell: K is 50 pixels wide, against 51. Its ink reaches past its advance and the cell is
-the ink's width rounded up (section 2), and the outline's right edge, read by skrifa rather
-than DirectWrite, falls on the other side of a whole pixel; every cell after it moves one
-pixel. The atlases' pixels differ slightly, from the same outlines read by another reader:
+**KMRP version: the same arithmetic, in KMRP 1.6's own file sizes.** The TXI files of the
+14 fonts outside the Journal tile are the C# program's byte for byte, for all three fonts.
+The Journal tile's three (`fnt_creditsa`, `fnt_d16x16a`, `fnt_dialog16x16`) are laid out
+otherwise since 2026-11-09 (below): the same header and cell widths, other places, in an
+atlas half as wide and high. One cell width differs there, Arial's K, 50 pixels against 51:
+its ink reaches past its advance and the cell is the ink's width rounded up (section 2), and
+the outline's right edge, read by skrifa rather than DirectWrite, falls on the other side of
+a whole pixel. The 14 atlases of the same size differ slightly in their pixels, from the
+same outlines read by another reader:
 
-| Font (KMRP version) | TXI files the same | Pixels that differ | Mean difference there (of 255) | Largest |
+| Font (KMRP version) | TXI files the same (of the 14) | Pixels that differ | Mean difference there (of 255) | Largest |
 | --- | ---: | ---: | ---: | ---: |
-| KMRP Original HD Dialogue (CFF OTF) | 17 of 17 | 556,842 | 1.2 | 13 |
-| Georgia | 17 of 17 | 837,852 | 3.0 | 45 |
-| Arial | 14 of 17 | 743,869 | 3.3 | 252 (the cells moved by K) |
+| KMRP Original HD Dialogue (CFF OTF) | 14 | 463,419 | 1.2 | 13 |
+| Georgia | 14 | 707,217 | 3.1 | 45 |
+| Arial | 14 | 626,506 | 1.5 | 9 |
+
+*Corrected 2026-11-09:* this table first compared all 17, the Journal's three included, and
+for Arial gave 14 of 17 the same and a largest difference of 252, from the cells after K
+moving a pixel.
+
+**The file sizes are KMRP 1.6's** (2026-11-09, the maintainer: "the font converter needs to
+give the exact size font files for kmrp that kmrp 1.6 currently uses"). KMRP 1.6 packs
+`assets/hd-original-fonts` as its HD Font (`kmrfho00..17`, `tools/build_native_assets.py`),
+and `data/references.txt` was found to hold those 17 TXI headers and atlas widths unchanged
+(compared field by field that day). The converter matched them in 14 of 17: the Journal
+tile's three are 1024 square in KMRP, at 84 pixels a letter 11 rows of 88, and KMRP's own
+narrow letters fill them (9,516 pixels of cells). Arial's, Georgia's and KMRP's Dialogue
+OTF's are 10,763 to 11,453, 1,824 of them the 38 blank slots (control codes, the five
+undefined bytes), and did not fit in slot order: the converter doubled them to 2048, a 16 MB
+file where KMRP's is 4 MB. Now, where slot order does not fit KMRP's size, the blank slots
+share one empty cell, each keeping its own width (the TXI gives each slot its own place, and
+places may coincide), and the letters go widest first into the first row with room. The
+regression test checks that every KMRP-version atlas is KMRP's size and every header field
+KMRP's: so for all nine fonts it converts, every `.tga` is the same size in bytes as KMRP's
+(18 bytes of header and 4 a texel). Of the `.txi` files, 14 of 17 are the same size in bytes
+as KMRP's for Arial, Georgia and KMRP's Dialogue OTF (measured); the Journal's three are 523
+bytes smaller because KMRP's own copies of those three end their lines with CR LF and its
+other 14, like the converter's, with LF alone. Text read back from the new
+1024 Journal atlases by their TXI coordinates draws as from the 2048 ones (Georgia, Arial and
+KMRP's Dialogue OTF, "Find Bastila, then a way off Taris."). A font wide enough not to fit
+even so still gets a larger atlas; none of the nine needed one. **Not yet seen in the game.**
 
 **Original-game version: the hinting is the font's, no longer Windows'.** DirectWrite's
 GDI-classic drawing is Windows' own and not available elsewhere; the Rust program hints each

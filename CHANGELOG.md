@@ -19,8 +19,8 @@ Nothing has been released from this repository yet: no tag, no GitHub release
 ### KMRP Font Converter 1.0.0
 
 To be released on the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
-maintainer, 2026-11-08). The Windows exe is 6,497,280 bytes, SHA-256
-`AB195B7AA8C84F6A3B7F170CB49E823A3E858668E8A4A5A2B09775DC7AD5F9EF`, built deterministically
+maintainer, 2026-11-08). The Windows exe is 6,505,984 bytes, SHA-256
+`C8809F9D2B89A9D9F56E3FB8149F39276730B8CBEE9490386572F283CFB7F758`, built deterministically
 from this repository; it and the other packages, and how they were checked, are in
 [font-converter.md](font-converter/docs/font-converter.md) sections 6 and 7.
 
@@ -32,9 +32,14 @@ from this repository; it and the other packages, and how they were checked, are 
   `build-linux.sh` make them, after KMSE's scripts; `.github/workflows/build.yml` runs the
   tests on all three systems and makes the packages on demand.
 - Fonts read by the program itself (skrifa; wuff for WOFF2) instead of Windows'
-  DirectWrite. The KMRP version's TXI files are the C# program's byte for byte for Georgia
-  and KMRP's Dialogue OTF; Arial's differ in one cell of three files (K, 50 pixels wide
-  against 51).
+  DirectWrite. The KMRP version's TXI files outside the Journal tile are the C# program's
+  byte for byte for Arial, Georgia and KMRP's Dialogue OTF.
+- The KMRP version's atlases are always the size of KMRP 1.6's own HD Font's (the
+  maintainer: "the exact size font files for kmrp that kmrp 1.6 currently uses"). The
+  Journal tile's three (`fnt_creditsa`, `fnt_d16x16a`, `fnt_dialog16x16`) had come out
+  2048 square, 16 MB each, where KMRP's are 1024, 4 MB: where the letters do not fit in
+  slot order, the blank slots now share one empty cell and the letters are packed widest
+  first. All nine fonts the test converts fit KMRP's sizes; the test now checks it.
 - The original game's letters hinted by the font's own instructions (FreeType's normal
   target) instead of Windows' GDI-classic drawing, then widened by 0.3 of the game's
   pixels (the maintainer: "slightly wider instead of slightly narrower"): the same heights

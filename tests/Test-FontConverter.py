@@ -9,8 +9,9 @@ which converts without a window, and checks what it wrote, as docs
   * every input below, for KMRP (--version=kmrp) and the original game (--version=original):
     all 17 .tga/.txi pairs; TGA type 2 at 32 bits, full length, at most 4096 square; the
     TXI's texturewidth the atlas's width, every cell inside the atlas, none zero wide from
-    slot 32 up, no comma in a number; the dialogue font's A has ink. For KMRP the heights are
-    the HD Original font's; for the original game a sixth of them, the atlas a power of two,
+    slot 32 up, no comma in a number; the dialogue font's A has ink. For KMRP the atlas is
+    the size of KMRP 1.6's own HD Original font's and the TXI header its header (since
+    2026-11-09); for the original game the heights a sixth of them, the atlas a power of two,
     and (when build/native-runtime/original-fonts holds the game's own) fontheight and
     baselineheight equal to the game's;
   * refused, nothing written, exit code 1: random bytes, an empty file, a font with no Latin
@@ -78,7 +79,7 @@ def references():
     for line in (CONVERTER / "data" / "references.txt").read_text(encoding="ascii").splitlines():
         p = line.split()
         if line.startswith("font "):
-            cur = refs[p[1]] = {}
+            cur = refs[p[1]] = {"atlas": int(p[2])}
         elif len(p) == 2:
             cur[p[0]] = float(p[1])
     return refs
@@ -142,6 +143,14 @@ def check_set(folder, version, label, refs):
         divisor = 6 if version == "original" else 1
         for key in ("fontheight", "baselineheight"):
             ok &= check(abs(float(head[key]) - ref[key] / divisor) < 1e-6, f"{label}: {name} {key} {head[key]}, wanted {ref[key] / divisor:.6f}")
+        if version == "kmrp":
+            # The atlas KMRP 1.6's own HD font has (2026-11-09: the maintainer wants the
+            # exact size font files KMRP 1.6 uses), and every header line but texturewidth
+            # as its TXI has it.
+            ok &= check(w == ref["atlas"], f"{label}: {name} atlas {w}, KMRP's is {ref['atlas']}")
+            for key, value in ref.items():
+                if key not in ("atlas", "texturewidth"):
+                    ok &= check(abs(float(head[key]) - value) < 1e-6, f"{label}: {name} {key} {head.get(key)}, KMRP's is {value}")
         if version == "original":
             ok &= check(w & (w - 1) == 0, f"{label}: {name} atlas {w} not a power of two")
             game = game_txi(name)
