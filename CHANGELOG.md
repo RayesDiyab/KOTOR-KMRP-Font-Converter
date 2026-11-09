@@ -30,7 +30,9 @@ from this repository; it and the other packages, and how they were checked, are 
   exe and zip, a macOS app for Apple silicon and Intel (Universal 2, DMG and zip), and
   Linux AppImages for x86_64 and aarch64. `build.ps1`, `build-macos.sh` and
   `build-linux.sh` make them, after KMSE's scripts; `.github/workflows/build.yml` runs the
-  tests on all three systems and makes the packages on demand.
+  tests on all three systems and builds no release (the maintainer: "dont build the actual
+  release just make the ci run tests"; until then it could make the packages when run by
+  hand or by a tag).
 - Fonts read by the program itself (skrifa; wuff for WOFF2) instead of Windows'
   DirectWrite. The KMRP version's TXI files outside the Journal tile are the C# program's
   byte for byte for Arial, Georgia and KMRP's Dialogue OTF.
@@ -83,7 +85,10 @@ from this repository; it and the other packages, and how they were checked, are 
   and `KMRP-Font-Converter-<version>-*`. The window's title and the macOS menu bar still
   say "KMRP Font Converter".
 - The tests run on macOS and Linux too, with KMRP's own fonts as inputs where Windows' are
-  missing; their close-while-converting check finds the window by its title.
+  missing; their close-while-converting check finds the window by its title, and passes on
+  nothing written or the whole set, failing on any part of it (until then it demanded
+  nothing, and failed on the CI's Windows machine, where the fonts were done before the
+  window read the close).
 - **Not yet run:** the macOS app (type-checked for both architectures, not built), the Linux
   window, the aarch64 AppImage. The x86_64 AppImage converted fonts under WSL's Ubuntu 20.04.
 

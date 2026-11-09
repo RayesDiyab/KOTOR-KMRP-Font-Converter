@@ -70,7 +70,7 @@ does not change what the text says, or the size of the game's text in the origin
 | Game | *Star Wars: Knights of the Old Republic* (2003 PC release). Seen working with GOG's 1.03 `swkotor.exe` (`9C10E045...`) for the original game, and with KMRP on Steam's game |
 | For the KMRP version | KMRP 1.6.0 or later. An older KMRP draws these fonts six times too large |
 | Windows | 10 or 11, 64-bit: `KOTOR-Font-Converter-<version>-Windows-x64.zip`. Seen working on Windows 11 (2026-11-09) |
-| macOS | 11 or later, Apple silicon or Intel (one Universal 2 app): `KOTOR-Font-Converter-<version>-macOS.dmg`. **Not yet run on a Mac**: compiled for both architectures on Windows (type-checked, not linked); the app is made by `build-macos.sh` on a Mac or by the CI workflow, not yet run |
+| macOS | 11 or later, Apple silicon or Intel (one Universal 2 app): `KOTOR-Font-Converter-<version>-macOS.dmg`. **Not yet run on a Mac**: compiled for both architectures on Windows (type-checked, not linked); the app is made by `build-macos.sh` on a Mac, not yet run. CI builds and tests the program on macOS (no app) |
 | Linux | x86_64 or aarch64: `KOTOR-Font-Converter-<version>-Linux-<arch>.AppImage`. The x86_64 one converted fonts under WSL's Ubuntu 20.04 (2026-11-09); its window and the aarch64 one: **not yet tried** |
 | The game on macOS and Linux | The Windows game through Steam's Proton, CrossOver or Wine: the fonts go in its Override folder |
 
@@ -177,8 +177,8 @@ and converts nine inputs (TTF, CFF OTF, two collections, a variable font, Georgi
 TTF, WOFF, WOFF2) for both versions, checking all 34 files of each set, then feeds it broken
 and hostile files and checks nothing is written. With a built KMRP checkout beside this
 repository it also compares the original-game fonts with the game's own. The workflow
-`.github/workflows/build.yml` runs it on Windows, macOS and Linux and makes the four
-packages on demand. The version is written once, as `version` in
+`.github/workflows/build.yml` runs it and the unit tests on Windows, macOS and Linux; it
+builds no release (the packages are made with the scripts above). The version is written once, as `version` in
 `font-converter/Cargo.toml`.
 
 > [!NOTE]
@@ -189,7 +189,7 @@ packages on demand. The version is written once, as `version` in
 
 ```
 .github/scripts/      check_links.py: every relative link in the documents resolves
-.github/workflows/    build.yml: the tests on three systems, the four packages on demand
+.github/workflows/    build.yml: the tests on three systems (no release build)
 docs/                 The documentation standard this repository holds itself to
 font-converter/       The converter: Rust sources (src/), the three build scripts, its data
                       and window fonts

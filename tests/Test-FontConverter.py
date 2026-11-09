@@ -293,15 +293,27 @@ def close_while_converting(spec):
         check(False, "close while converting: the program did not exit")
         return
     left = sorted(x.name for x in folder.iterdir())
-    check(bool(found), "close while converting: no window found")
-    check(not left, f"close while converting: left in the folder: {left[:6]}")
+    whole = sorted(f"{n}{e}" for n in NAMES for e in (".tga", ".txi"))
+    # Nothing, or the whole set: never a part of it. The close is read only at the window's
+    # next frame, so a slow machine may finish all 34 first (2026-11-09: the first CI run on
+    # Windows, which draws through Windows' software renderer, did; locally the stop came
+    # first in every run).
+    if check(bool(found), "close while converting: no window found") and \
+       check(not left or left == whole, f"close while converting: {len(left)} of {len(whole)} files left: {left[:6]}"):
+        print("ok    close while converting: " + ("stopped, nothing written" if not left else "finished before the close arrived; the whole set, no part"))
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--no-build", action="store_true")
+    # The program to test, built elsewhere: CI builds it with the quicker tests profile
+    # (build/target/tests), not a release build (2026-11-09).
+    parser.add_argument("--exe", type=Path)
     args = parser.parse_args()
-    if not args.no_build:
+    global EXE
+    if args.exe:
+        EXE = args.exe.resolve()
+    elif not args.no_build:
         if WINDOWS:
             subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(CONVERTER / "build.ps1"), "-NoTests"], check=True)
         else:
@@ -374,8 +386,6 @@ def main():
 
     if WINDOWS:
         close_while_converting(str(SOURCE))
-        if not any(f.startswith("close") for f in failures):
-            print("ok    closed while converting: stopped, nothing written")
     else:
         print("skip  closed while converting: the check sends WM_CLOSE, Windows only")
 

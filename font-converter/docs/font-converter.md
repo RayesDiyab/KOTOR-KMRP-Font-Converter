@@ -350,9 +350,15 @@ The Windows exe is deterministic: the linker writes no time stamp (`/Brepro`,
 (`--remap-path-prefix`), so the same sources give the same bytes (audit R2; checked
 2026-11-09: a rebuild after `cargo clean -p kmrp-font-converter` gave the same SHA-256).
 `.github/workflows/build.yml` runs the unit and regression tests on Windows, macOS and
-Ubuntu 22.04 on every push to master, and, run by hand or by a `v*` tag, the four packages:
-Windows x64, macOS Universal 2, and the AppImages on Ubuntu 22.04 for x86_64 and on its ARM
-runner for aarch64. **Not yet run:** the workflow (nothing has been pushed).
+Ubuntu 22.04 on every push to master and every pull request, and checks the documents'
+links. It builds no release: the program it tests is built with the `tests` profile
+(optimized, no LTO; the regression test's `--exe` names it), and the packages are made by
+the three scripts on the maintainer's machines (2026-11-09, the maintainer: "dont build the
+actual release just make the ci run tests", as KMSE's CI). *Superseded the same day:* the
+workflow first also had jobs making the four packages, run by hand or by a `v*` tag; they
+never ran. Its first run (the push of 2026-11-09) failed on all three systems (section 3
+and section 9 say why); the regression test passed here, on the tests-profile build, as CI
+now runs it.
 
 The packages made on 2026-11-09 on the maintainer's Windows PC. The Linux programs were
 built there with `cargo zigbuild` for glibc 2.31 (as `build-linux.sh --zig` does, with the
@@ -419,7 +425,7 @@ a power-of-two atlas there; ink in the dialogue font's A; no work folder left); 
 bytes, an empty file, a font with digits only and a WOFF claiming 2 GB refused with nothing
 written; a `.tpc` set aside earlier kept and the next one set aside as `-2`; a read-only file
 stopping the conversion with nothing changed; and the window closed while converting,
-leaving nothing (Windows only: the check sends `WM_CLOSE`). Each set took 0.3 to 1.2 s
+leaving nothing or the whole set, never a part (Windows only: the check sends `WM_CLOSE`). Each set took 0.3 to 1.2 s
 (2026-11-09, Rust: 0.7 to 1.2 s for KMRP, 0.3 to 0.6 s for the original game; the C#
 program took 1.0 to 1.1 s and 0.5 to 0.7 s).
 
@@ -428,6 +434,16 @@ Rust program it found none and failed: eframe shows its window only after the fi
 in which the conversion starts, and winit keeps a second visible window of its own. It now
 finds the window by its title and process. Traced by hand: `WM_CLOSE` during a conversion
 of all eleven tiles, the program exited 1 s later with nothing in the folder.
+
+*Corrected 2026-11-09, later:* the check demanded an empty folder. On the CI's Windows
+machine (no graphics driver; the window drawn by Windows' software renderer) the folder held
+font files after the close, and the log listed only the first six. The window reads a close
+at its next frame, and there the conversion had finished first. Locally, with the graphics
+card and with the software renderer forced (`WGPU_FORCE_FALLBACK_ADAPTER=1`), the stop came
+first in all five runs. What the program promises is all or nothing, so the check now
+passes on an empty folder or on the whole set of 34 files, fails on any part of it, and says
+which it saw. Whether the CI machine left the whole set is not known: that run's log does
+not show it.
 
 `cargo test` runs the unit tests in `src/atlas.rs`: .NET's half-to-even rounding, the TXI's
 numbers rounded as .NET Framework wrote them, the Windows-1252 slots, the rasteriser's

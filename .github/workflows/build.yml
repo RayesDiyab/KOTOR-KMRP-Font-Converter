@@ -1,24 +1,18 @@
-# The KMRP Font Converter on Windows, macOS and Linux.
+# Checks the KMRP Font Converter on Windows, macOS and Linux: it compiles, its unit tests
+# pass, and the regression test (tests/Test-FontConverter.py: every font type into both
+# versions, and what it must refuse) passes; and every relative link in the documents
+# resolves.
 #
-# test: on every push to master and every pull request, the unit tests and the regression
-# test (tests/Test-FontConverter.py: every font type into both versions, and what it must
-# refuse) on each system, and every relative link in the documents.
-#
-# packages: run by hand (Actions, "Run workflow") or by a tag v*, the release packages, as the
-# build scripts make them on a maintainer's machine:
-#   Windows   font-converter/build.ps1 -Release     KOTOR-Font-Converter-<v>-Windows-x64.zip
-#   macOS     font-converter/build-macos.sh          KOTOR-Font-Converter-<v>-macOS.dmg and .zip
-#                                                    (Universal 2: Apple silicon and Intel; ad hoc
-#                                                    signed, not notarized)
-#   Linux     font-converter/build-linux.sh          KOTOR-Font-Converter-<v>-Linux-x86_64.AppImage
-#                                                    KOTOR-Font-Converter-<v>-Linux-aarch64.AppImage
-# Each is kept as the run's artifact. Nothing is published or released by this workflow.
+# Tests only. The release packages (the Windows exe and zip, the macOS app, DMG and zip, the
+# Linux AppImages) are built on the maintainer's machines with build.ps1, build-macos.sh and
+# build-linux.sh, not here (2026-11-09, the maintainer: "dont build the actual release just
+# make the ci run tests", as KMSE's CI). The program the regression test runs is built with
+# the tests profile (Cargo.toml: optimized, no LTO, quicker to build), not as a release.
 name: Font Converter
 
 on:
   push:
     branches: [master]
-    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -28,7 +22,6 @@ permissions:
 jobs:
   test:
     name: test ${{ matrix.os }}
-    if: github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
     strategy:
       fail-fast: false
       matrix:
@@ -47,15 +40,15 @@ jobs:
         with:
           workspaces: font-converter -> build/target
       - name: Unit tests
-        run: cargo test --profile tests
-      - name: Release build (Windows)
+        run: cargo test --profile tests --locked
+      - name: Build for the regression test
+        run: cargo build --profile tests --locked
+      - name: Regression test (Windows)
         if: runner.os == 'Windows'
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File build.ps1 -NoTests
-      - name: Release build
-        if: runner.os != 'Windows'
-        run: cargo build --release --locked
+        run: python ../tests/Test-FontConverter.py --exe build/target/tests/kmrp-font-converter.exe
       - name: Regression test
-        run: python ../tests/Test-FontConverter.py --no-build
+        if: runner.os != 'Windows'
+        run: python ../tests/Test-FontConverter.py --exe build/target/tests/kmrp-font-converter
 
   links:
     name: Documentation links
@@ -66,50 +59,3 @@ jobs:
         with:
           python-version: "3.12"
       - run: python .github/scripts/check_links.py
-
-  windows:
-    name: package Windows x64
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: powershell -NoProfile -ExecutionPolicy Bypass -File font-converter/build.ps1 -Release
-      - uses: actions/upload-artifact@v4
-        with:
-          name: KOTOR-Font-Converter-Windows-x64
-          path: font-converter/dist/KOTOR-Font-Converter-*-Windows-x64.zip
-
-  macos:
-    name: package macOS (Universal 2)
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
-      - run: sh font-converter/build-macos.sh
-      - uses: actions/upload-artifact@v4
-        with:
-          name: KOTOR-Font-Converter-macOS
-          path: |
-            font-converter/dist/KOTOR-Font-Converter-*-macOS.dmg
-            font-converter/dist/KOTOR-Font-Converter-*-macOS.zip
-
-  linux:
-    name: package Linux ${{ matrix.arch }}
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x86_64
-            runner: ubuntu-22.04
-          - arch: aarch64
-            runner: ubuntu-22.04-arm
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - uses: actions/checkout@v4
-      - run: sh font-converter/build-linux.sh --arch ${{ matrix.arch }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: KOTOR-Font-Converter-Linux-${{ matrix.arch }}
-          path: font-converter/dist/KOTOR-Font-Converter-*-Linux-${{ matrix.arch }}.AppImage

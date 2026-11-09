@@ -31,7 +31,7 @@ Each script runs the unit tests first (`--no-tests` / `-NoTests` skips them), bu
 the same bytes (`/Brepro`, `.cargo/config.toml`, and the sources' folders mapped to fixed
 names). The macOS and Linux scripts were made after KMSE's own (2026-11-09). The workflow
 [`.github/workflows/build.yml`](../.github/workflows/build.yml) runs the tests on all three
-systems and, run by hand or by a `v*` tag, makes all four packages.
+systems; it builds no release (as KMSE's CI).
 
 The examples on its tiles and the font metrics it keeps are in `data/`, made by
 `make_data.py` from KMRP's `assets/hd-original-fonts`. After that font changes, run
