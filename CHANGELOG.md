@@ -139,6 +139,11 @@ The 11 OpenType files and the collection listed with their hashes in
 [fonts/README.md](fonts/README.md) section 1; the download is
 `fonts/release-kit/KMRP-Original-HD-Fonts.zip`.
 
+- 2026-11-13: a press kit for the fonts on their own, without the converter
+  (`fonts/release-kit/press-kit`, drawn by `fonts/release-kit/make_press_kit.py` from the
+  font files): cover, the family, two outlines, the character set, kerning, which font is
+  which, and press text in its README.
+
 ### Repository
 
 - 2026-11-08: the converter and the fonts moved here from KMRP's repository, history
