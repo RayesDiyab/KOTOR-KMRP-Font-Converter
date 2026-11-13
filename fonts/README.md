@@ -14,6 +14,26 @@ change and share, with credit, under the [SIL Open Font License 1.1](OFL.txt)**:
 anyone may bundle them in a game, a mod, an app or a website without asking. No
 Reserved Font Name, so a changed version may keep the name.
 
+**Version 1.0, released** 2026-11-13 as GitHub release
+[`fonts-v1.0`](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/fonts-v1.0):
+`release-kit/KMRP-Original-HD-Fonts.zip`, 683,910 bytes, SHA-256
+`8fb2f62945494ab46d615f8ba8ddcd136f4b603d68aaa2a86a6d6f2b3f3e433a`. Checked that day before the upload: the
+zip's CRC passed, its 14 files are this repository's byte for byte (`README.txt` with CR LF
+line ends), and the 12 font files match section 1's sizes and hashes.
+
+*Corrected 2026-11-13:* the fonts were version 1.600 (`head.fontRevision` 1.6, name ID 5
+"Version 1.600", name ID 3 "1.600;KMRP;..."), and the same day released as `fonts-v1.600`;
+the maintainer: "the orignal hd font is 1.0!". That release and its tag were deleted and
+made again as `fonts-v1.0`. `tools/set_version.py` set those three to 1.0, "Version 1.000"
+and "1.000;KMRP;..." in the 11 OTF files and the 11 fonts of the collection, keeping
+`head.modified`; every other table is the 1.600 files' byte for byte (compared table by
+table against the old files), so the outlines, hints, kerning and metrics, and KMRP's
+atlases drawn from them, are unchanged. Every hash in section 1 changed with it; the
+collection is 1,992 bytes smaller (653,552 before), its tables the same, laid out by
+fontTools' `shareTables` again. `finish.py` and `run.py` now write 1.0 too. Not changed:
+the converter's two TrueType copies in `font-converter/fonts`, which are inside the
+released converter 1.0.0 exe and still say 1.600.
+
 KMRP draws its game atlases from these files (`tools/build_hd_original_atlases.py`
 writes `assets/hd-original-fonts`), and the KOTOR Modern Gamesave Editor sets its window in them.
 
@@ -28,18 +48,18 @@ ttfautohint's hints: one file that installs all 11 fonts.
 
 | File | Bytes | Units per em | Glyphs | SHA-256 |
 | --- | ---: | ---: | ---: | --- |
-| `KMRP-OriginalHD-Console.otf` | 16,068 | 1000 | 96 | `1fc40423354679d9481380fc91085a8ec9c6f3cf7bd0cfb7a453618a527eb435` |
-| `KMRP-OriginalHD-Credits.otf` | 45,380 | 1000 | 218 | `9047140b53e1fd886e170137d30f868f7a5f4a18318c813e073f2e5ed05b0b68` |
-| `KMRP-OriginalHD-CreditsBold.otf` | 45,420 | 1000 | 218 | `7f5ac43399e7b54a89985bbb24a8b9b3f8d875dc2e3b0d5b971b5feb4d4defc3` |
-| `KMRP-OriginalHD-Descriptions.otf` | 45,456 | 1000 | 218 | `daa61410665e946341689ecaee43304e4e69fd5a31aae7195fc5a2dbc15e3c0d` |
-| `KMRP-OriginalHD-Dialogue.otf` | 45,384 | 1000 | 218 | `c753fbb8fa2ff826e83ac98c56ab0744d90230c4ca51428cc2830b25e26bd264` |
-| `KMRP-OriginalHD-Light.otf` | 38,028 | 1000 | 218 | `bc4efc1ddefda34d58958e28a20100cc4551bfa310a86ef4d80fcf6d45c439aa` |
-| `KMRP-OriginalHD-Menu.otf` | 40,244 | 1000 | 218 | `5ddbf458d9740ef2257c965154837366ac8b10f96c3c694336dc1919f96124cd` |
-| `KMRP-OriginalHD-MenuLarge.otf` | 41,428 | 1000 | 218 | `2f7e058c6ccbb2ba52dc4af9c71211c811959240fa38eecea770a036f9f28851` |
-| `KMRP-OriginalHD-MenuMedium.otf` | 40,452 | 1000 | 218 | `ecd8638a99f2250b9004b3d540ad03d099de1e233df22cda00cac49f5470bd30` |
-| `KMRP-OriginalHD-MenuSmall.otf` | 38,500 | 1000 | 218 | `3f2d790ef9c1ae004110f7e8422db5ed3a6971d8eb644e47a907de490bf7497c` |
-| `KMRP-OriginalHD-MenuSmallB.otf` | 40,188 | 1000 | 218 | `109ed376a6eee1a2980d4b8991c1d0ede57b3542de4f77b55d2a42c11f5be895` |
-| `KMRP-OriginalHD.ttc` | 653,552 | 1000 | 11 fonts | `cf74d2868d10d1d533b5c03f6871f47ecf6e1cadf4d4a2f4c51c1c7ae1eb1f41` |
+| `KMRP-OriginalHD-Console.otf` | 16,068 | 1000 | 96 | `fd3d78a32bbecfd252c8936082d2469e852cba3334e7b361aa8994d571f2feee` |
+| `KMRP-OriginalHD-Credits.otf` | 45,380 | 1000 | 218 | `d7a7cedd038286e8838445df1d657867e51372ec1a5b82659364be69c46160ad` |
+| `KMRP-OriginalHD-CreditsBold.otf` | 45,420 | 1000 | 218 | `cc396509a0123e36031ae8aeb844d6f7d61e8f9a09c86047449a011bf5029954` |
+| `KMRP-OriginalHD-Descriptions.otf` | 45,456 | 1000 | 218 | `1abf6e72534180d7ae9200c1d6abf441b4c31269efb2895c9d75bf68c2719a58` |
+| `KMRP-OriginalHD-Dialogue.otf` | 45,384 | 1000 | 218 | `e267b4693563156559a4b9ff58fea2ea292aaf72bdebd65368117bd13cb6849d` |
+| `KMRP-OriginalHD-Light.otf` | 38,028 | 1000 | 218 | `1a0dd3455d6831e42288e7c530e907d2863488ef173d1f9bd265432dbf6becf5` |
+| `KMRP-OriginalHD-Menu.otf` | 40,244 | 1000 | 218 | `541880c0f8e3cfe3ca517096562d4c3bc49615b3a3e2cc1d39fbe59ed524f6b6` |
+| `KMRP-OriginalHD-MenuLarge.otf` | 41,428 | 1000 | 218 | `1743791616d76c8bafc86035218e2baf286eadb789c57020be2de736060b596a` |
+| `KMRP-OriginalHD-MenuMedium.otf` | 40,452 | 1000 | 218 | `f2c70ea7b6cb4e58caf49affa9cee3a3463bbd499474edb964287caa767f11b6` |
+| `KMRP-OriginalHD-MenuSmall.otf` | 38,500 | 1000 | 218 | `867c8552f50e895d90836f22d7988969c0e171c7dffc8b6458d526d7c6de9e6a` |
+| `KMRP-OriginalHD-MenuSmallB.otf` | 40,188 | 1000 | 218 | `da1466f65a0ac04fff03b537633f7427cda944b2b4ea285480af36bfe0b5f75b` |
+| `KMRP-OriginalHD.ttc` | 651,560 | 1000 | 11 fonts | `c318758ebb70bbff438a32213b7caed6bacb84764641acd49192ec6a73f42086` |
 
 Which file is which game font:
 

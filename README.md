@@ -147,8 +147,9 @@ mod, an app or a website, without asking.
 KMRP draws its in-game HD Font from these files, the converter sets its window in two of
 them, and the KOTOR Modern Gamesave Editor uses them too. Hashes, the redraw, the
 measurements against the atlases and the rejected methods are in
-[fonts/README.md](fonts/README.md); the download for players is
-[fonts/release-kit](fonts/release-kit/README.txt).
+[fonts/README.md](fonts/README.md); the download for players is the
+**[fonts 1.0 release](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/fonts-v1.0)**
+(2026-11-13), the zip made from [fonts/release-kit](fonts/release-kit/README.txt).
 
 ## Build from source
 

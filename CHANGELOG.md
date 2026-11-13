@@ -14,21 +14,11 @@ history (`git log` reaches back to their first commits). Their entries until the
 The KMRP Font Converter 1.0.0 is this repository's first release: GitHub release
 [`v1.0.0`](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/v1.0.0),
 2026-11-13. *Superseded that day:* "Nothing has been released from this repository yet:
-no tag, no GitHub release (checked 2026-11-09)." The fonts have no GitHub release of
-their own yet.
+no tag, no GitHub release (checked 2026-11-09)." The KMRP Original HD fonts 1.0
+followed the same day: GitHub release
+[`fonts-v1.0`](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/fonts-v1.0).
 
 ## [Unreleased]
-
-### KMRP Original HD fonts 1.600
-
-The 11 OpenType files and the collection listed with their hashes in
-[fonts/README.md](fonts/README.md) section 1; the download is
-`fonts/release-kit/KMRP-Original-HD-Fonts.zip`.
-
-- 2026-11-13: a press kit for the fonts on their own, without the converter
-  (`fonts/release-kit/press-kit`, drawn by `fonts/release-kit/make_press_kit.py` from the
-  font files): cover, the family, two outlines, the character set, kerning, which font is
-  which, and press text in its README.
 
 ### Repository
 
@@ -46,6 +36,27 @@ after the move. They now name this one; the fonts' zip was made again with the n
 readme (its 14 files otherwise the repository's, byte for byte). `make_zip.py` wrote
 `KMRP-Original-HD-Fonts-1.600.zip` while the committed zip is named without the
 version; it now writes the committed name.
+
+## [fonts 1.0] - 2026-11-13: KMRP Original HD fonts
+
+Released 2026-11-13 as GitHub release
+[`fonts-v1.0`](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/fonts-v1.0):
+`KMRP-Original-HD-Fonts.zip`, 683,910 bytes, SHA-256 `8FB2F629...`, with the 11 OpenType
+files and the collection listed with their hashes in [fonts/README.md](fonts/README.md)
+section 1, where the release's checks are too.
+
+**Changed 2026-11-13: the fonts' version is 1.0** (the maintainer: "the orignal hd font is
+1.0!"). Until then 1.600 in the files (`head.fontRevision`, name IDs 3 and 5), the zip's
+readme and the press kit; set in the files by `fonts/tools/set_version.py`, every other
+table unchanged, so every font hash changed and nothing drawn did. The release first made
+as `fonts-v1.600` the same day (its tag on `80dd15a`, the zip 684,143 bytes, `75B7E4E9...`)
+was deleted with its tag and made again as `fonts-v1.0`. The converter's two TrueType
+copies, inside the released converter 1.0.0, still say 1.600.
+
+- 2026-11-13: a press kit for the fonts on their own, without the converter
+  (`fonts/release-kit/press-kit`, drawn by `fonts/release-kit/make_press_kit.py` from the
+  font files): cover, the family, two outlines, the character set, kerning, which font is
+  which, and press text in its README.
 
 ## [1.0.0] - 2026-11-13: KMRP Font Converter
 

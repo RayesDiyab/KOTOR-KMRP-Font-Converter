@@ -170,7 +170,7 @@ def build(fontfile: Path, pool, only=None):
     hh = font["hhea"]
     fb.setupHorizontalHeader(ascent=hh.ascent * G, descent=hh.descent * G)
     fb.setupNameTable({"familyName": family, "styleName": "Regular", "uniqueFontIdentifier": names[3],
-                       "version": "Version 1.600", "description": names.get(10, "")})
+                       "version": "Version 1.000", "description": names.get(10, "")})
     os2 = font["OS/2"]
     fb.setupOS2(sTypoAscender=os2.sTypoAscender * G, sTypoDescender=os2.sTypoDescender * G, sTypoLineGap=0,
                 usWinAscent=os2.usWinAscent * G, usWinDescent=os2.usWinDescent * G, achVendID="KMRP")

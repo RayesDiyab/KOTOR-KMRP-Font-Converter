@@ -29,7 +29,7 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 OTF = REPO / "fonts" / "otf"
 OUT = HERE / "press-kit"
-VERSION = "1.600"
+VERSION = "1.0"   # "1.600" until 2026-11-13, when the fonts became 1.0
 
 # The game's GUI text colours, as make_preview.py and make_compare.py use them.
 BLUE = (0, 168, 250)

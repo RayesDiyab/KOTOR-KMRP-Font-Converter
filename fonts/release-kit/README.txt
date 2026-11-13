@@ -1,5 +1,5 @@
-KMRP Original HD fonts, version 1.600
-=====================================
+KMRP Original HD fonts, version 1.0
+===================================
 
 KOTOR's own fonts in high resolution: 11 OpenType fonts, redrawn from scratch as
 straight lines, sharp corners and arcs. The letter widths, spacing and baseline match

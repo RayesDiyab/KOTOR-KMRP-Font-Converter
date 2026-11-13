@@ -228,7 +228,7 @@ def rebuild(src: Path) -> TTFont:
     fb.setupHorizontalHeader(ascent=ascent, descent=-descent, lineGap=0)
     fb.setupNameTable({
         "copyright": COPYRIGHT, "familyName": family, "styleName": "Regular",
-        "uniqueFontIdentifier": f"1.600;KMRP;{ps}", "fullName": family, "version": "Version 1.600",
+        "uniqueFontIdentifier": f"1.000;KMRP;{ps}", "fullName": family, "version": "Version 1.000",
         "psName": ps, "designer": "RaymanGT", "manufacturer": "KMRP",
         "description": f"{family}: KOTOR's font redrawn in high resolution for KMRP as lines, corners and arcs",
         "vendorURL": VENDOR_URL, "designerURL": VENDOR_URL,
@@ -240,7 +240,7 @@ def rebuild(src: Path) -> TTFont:
                 sTypoAscender=ascent, sTypoDescender=-descent, sTypoLineGap=0,
                 usWinAscent=win_ascent, usWinDescent=win_descent)
     fb.setupPost()
-    fb.font["head"].fontRevision = 1.6
+    fb.font["head"].fontRevision = 1.0   # 1.6 until 2026-11-13, when the fonts became 1.0
     font = fb.font
     # One width for every character (Console, the HUD's font): declared monospaced, and
     # .notdef given that width too.

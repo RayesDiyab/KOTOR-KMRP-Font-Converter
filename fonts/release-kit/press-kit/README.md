@@ -1,4 +1,4 @@
-# KMRP Original HD fonts 1.600 press kit
+# KMRP Original HD fonts 1.0 press kit
 
 Release art and press text for the KMRP Original HD fonts on their own, without the Font
 Converter (whose kit is [`font-converter/release/press-kit`](../../../font-converter/release/press-kit/README.md)).
@@ -55,7 +55,7 @@ folder as a seventh.
 | | |
 | --- | --- |
 | Name | KMRP Original HD fonts |
-| Version | 1.600 (the files' own version string, "Version 1.600") |
+| Version | 1.0 (the files' own version string, "Version 1.000"; 1.600 until 2026-11-13) |
 | By | RaymanGT, for KMRP |
 | Files | 11 OpenType (CFF) fonts; the same 11 in one TrueType collection, `KMRP-OriginalHD.ttc` |
 | Characters | 218 a font, Windows-1252; Console 96 |
