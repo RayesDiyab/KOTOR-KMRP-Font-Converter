@@ -40,7 +40,7 @@ done
 fail() { echo "build-macos.sh: $*" >&2; exit 1; }
 
 [ "$(uname)" = "Darwin" ] || fail "this script builds the macOS app; on Linux use build-linux.sh, on Windows build.ps1"
-for tool in cargo rustup lipo codesign iconutil sips hdiutil plutil ditto; do
+for tool in cargo rustup lipo codesign iconutil sips hdiutil plutil ditto tiffutil osascript; do
     command -v "$tool" >/dev/null 2>&1 || fail "$tool was not found"
 done
 targets="aarch64-apple-darwin"
@@ -96,11 +96,13 @@ else
 fi
 chmod 755 "$app/Contents/MacOS/$exe"
 
-# The icon, from icon.png (make_icon.py: the sigil above FONT, 512 px), at every size macOS asks for.
+# The icon, from icon-macos.png (make_icon_macos.py: the sigil above FONT on a starry rounded
+# square, 1024 px; since 2026-11-13, as macOS 26 sets a transparent icon on a white plate),
+# at every size macOS asks for.
 iconset="$here/build/AppIcon.iconset"
 rm -rf "$iconset"
 mkdir -p "$iconset"
-master="$here/icon.png"
+master="$here/icon-macos.png"
 for s in 16 32 128 256 512; do
     sips -z "$s" "$s" "$master" --out "$iconset/icon_${s}x${s}.png" >/dev/null
     d=$((s * 2))
@@ -184,7 +186,78 @@ ditto "$app" "$stage/$package.app"
 ln -s /Applications "$stage/Applications"
 cp "$here/release/README.txt" "$here/release/THIRD-PARTY-NOTICES.txt" "$here/fonts/OFL.txt" "$stage/"
 cp "$here/../LICENSE" "$stage/LICENSE.txt"
-hdiutil create -quiet -volname "$name $version" -srcfolder "$stage" -fs HFS+ -format UDZO -ov "$dmg"
+# The DMG's window (since 2026-11-13): the converter's own background behind the app and
+# the Applications link, drawn by release/make_dmg_background.py, whose docstring gives the
+# icons' places used here. The image is made a writable disk first, Finder lays the window
+# out (it asks once to be controlled by the terminal), and the disk is then compressed.
+volume="$name $version"
+rw="$here/build/dmg-rw.dmg"
+mnt="$here/build/dmg-mount"
+rm -f "$rw"
+[ -d "$mnt" ] && { hdiutil detach -quiet -force "$mnt" 2>/dev/null || true; }
+rm -rf "$mnt"
+# Finder names the disk by its volume name: an earlier DMG of this version still open would
+# take the layout instead (seen 2026-11-13), so it is ejected first.
+if [ -d "/Volumes/$volume" ]; then
+    hdiutil detach -quiet "/Volumes/$volume" || fail "an older \"$volume\" is open; eject it and build again"
+fi
+hdiutil create -quiet -volname "$volume" -srcfolder "$stage" -fs HFS+ -format UDRW -size 80m -ov "$rw"
+mkdir -p "$mnt"
+hdiutil attach -quiet -readwrite -noverify -noautoopen -mountpoint "$mnt" "$rw"
+detach() { hdiutil detach -quiet "$mnt" 2>/dev/null || hdiutil detach -quiet -force "$mnt"; }
+trap detach EXIT
+mkdir "$mnt/.background"
+tiffutil -cathidpicheck "$here/release/dmg-background.png" "$here/release/dmg-background@2x.png" \
+    -out "$mnt/.background/background.tiff" >/dev/null 2>&1
+layout="$here/build/dmg-layout.applescript"
+cat > "$layout" <<'APPLESCRIPT'
+on run argv
+    set appName to item 1 of argv
+    set mountFolder to (POSIX file (item 2 of argv)) as alias
+    tell application "Finder"
+        set f to mountFolder
+        open f
+        delay 2
+        set w to container window of f
+        set current view of w to icon view
+        set toolbar visible of w to false
+        set statusbar visible of w to false
+        set the bounds of w to {200, 120, 920, 652}
+        set o to icon view options of w
+        set arrangement of o to not arranged
+        set icon size of o to 88
+        set text size of o to 12
+        set background picture of o to file ".background:background.tiff" of f
+        set position of item appName of f to {200, 190}
+        set position of item "Applications" of f to {520, 190}
+        set position of item "README.txt" of f to {120, 400}
+        set position of item "LICENSE.txt" of f to {280, 400}
+        set position of item "OFL.txt" of f to {440, 400}
+        set position of item "THIRD-PARTY-NOTICES.txt" of f to {600, 400}
+        update f without registering applications
+        delay 1
+        close w
+    end tell
+end run
+APPLESCRIPT
+# Finder sometimes refuses a window it has not finished opening (seen 2026-11-13): up to
+# three tries before giving up.
+tries=0
+until osascript "$layout" "$package.app" "$mnt"; do
+    tries=$((tries + 1))
+    [ "$tries" -lt 3 ] || fail "Finder could not lay out the DMG's window (allow the terminal to control Finder in System Settings, Privacy and Security, Automation)"
+    echo "Finder was not ready; trying again"
+    sleep 2
+done
+rm -f "$layout"
+[ -f "$mnt/.DS_Store" ] || fail "Finder wrote no layout for the DMG's window"
+chflags hidden "$mnt/.background"
+sync
+detach
+trap - EXIT
+hdiutil convert -quiet "$rw" -format UDZO -imagekey zlib-level=9 -o "$dmg"
+rm -f "$rw"
+rm -rf "$mnt"
 if [ -n "$identity" ]; then
     codesign --force --timestamp --sign "$identity" "$dmg"
     if [ -n "${KMRP_NOTARY_PROFILE:-}" ]; then
