@@ -58,10 +58,13 @@ does not change what the text says, or the size of the game's text in the origin
 ## Download
 
 > [!IMPORTANT]
-> **Not released yet.** 1.0.0 is released on the same day as KMRP 1.6.0 and the KOTOR
-> Modern Gamesave Editor. Until then it can be built from this repository
-> ([Build from source](#build-from-source)). This section gives the release's link
-> once it exists.
+> **[Download 1.0.0](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/v1.0.0)**
+> (released 2026-11-13): the Windows exe and zip, the macOS DMG and the Linux AppImage,
+> with their SHA-256. It can also be built from this repository
+> ([Build from source](#build-from-source)).
+
+*Superseded 2026-11-13:* until the release this said "Not released yet", with the release
+planned for the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor.
 
 **Requirements**
 
@@ -70,7 +73,7 @@ does not change what the text says, or the size of the game's text in the origin
 | Game | *Star Wars: Knights of the Old Republic* (2003 PC release). Seen working with GOG's 1.03 `swkotor.exe` (`9C10E045...`) for the original game, and with KMRP on Steam's game |
 | For the KMRP version | KMRP 1.6.0 or later. An older KMRP draws these fonts six times too large |
 | Windows | 10 or 11, 64-bit: `KOTOR-Font-Converter-<version>-Windows-x64.zip`. Seen working on Windows 11 (2026-11-09) |
-| macOS | 11 or later, Apple silicon or Intel (one Universal 2 app): `KOTOR-Font-Converter-<version>-macOS.dmg`. **Not yet run on a Mac**: compiled for both architectures on Windows (type-checked, not linked); the app is made by `build-macos.sh` on a Mac, not yet run. CI builds and tests the program on macOS (no app) |
+| macOS | 11 or later, Apple silicon or Intel (one Universal 2 app): `KOTOR-Font-Converter-<version>-macOS.dmg`. **Not yet run on a Mac** as far as this repository records: the 1.0.0 DMG was made by `build-macos.sh` on a Mac (2026-11-13) and read on Windows (both architectures, macOS 11, only the system's libraries, signed ad hoc); CI builds and tests the program on macOS (no app). Not notarized: on macOS 15 or later the first start is allowed in System Settings, Privacy & Security, *Open Anyway*; before 15, right-click the app and choose *Open* |
 | Linux | x86_64 (Intel or AMD, the Steam Deck too): `KOTOR-Font-Converter-<version>-Linux-x86_64.AppImage`. It converted fonts under WSL's Ubuntu 20.04 and, with its window open, on a Steam Deck's SteamOS (both 2026-11-09). There is no ARM build (an aarch64 AppImage was made until 2026-11-09, never run) |
 | The game on macOS and Linux | The Windows game through Steam's Proton, CrossOver or Wine: the fonts go in its Override folder |
 

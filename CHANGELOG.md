@@ -11,14 +11,49 @@ here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/
 Both were developed in KMRP's repository until 2026-11-08 and came here with their
 history (`git log` reaches back to their first commits). Their entries until then are in
 [KMRP's changelog](https://github.com/RayesDiyab/KMRP-KOTOR-Modern-Restoration-Patch/blob/master/CHANGELOG.md).
-Nothing has been released from this repository yet: no tag, no GitHub release
-(checked 2026-11-09).
+The KMRP Font Converter 1.0.0 is this repository's first release: GitHub release
+[`v1.0.0`](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/v1.0.0),
+2026-11-13. *Superseded that day:* "Nothing has been released from this repository yet:
+no tag, no GitHub release (checked 2026-11-09)." The fonts have no GitHub release of
+their own yet.
 
 ## [Unreleased]
 
-### KMRP Font Converter 1.0.0
+### KMRP Original HD fonts 1.600
 
-To be released on the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
+The 11 OpenType files and the collection listed with their hashes in
+[fonts/README.md](fonts/README.md) section 1; the download is
+`fonts/release-kit/KMRP-Original-HD-Fonts.zip`.
+
+- 2026-11-13: a press kit for the fonts on their own, without the converter
+  (`fonts/release-kit/press-kit`, drawn by `fonts/release-kit/make_press_kit.py` from the
+  font files): cover, the family, two outlines, the character set, kerning, which font is
+  which, and press text in its README.
+
+### Repository
+
+- 2026-11-08: the converter and the fonts moved here from KMRP's repository, history
+  kept. KMRP keeps its HD Font atlases, drawn from these fonts.
+- 2026-11-09: the press kit, in the converter's own style; the README's logo; the
+  documentation standard imported from KMRP's, with KMRP's link checker; this changelog.
+- 2026-11-13: the press kit's cover says the converter works with KMRP 1.6 and vanilla KOTOR,
+  on Windows, macOS and Linux (until then "For KMRP 1.6 or the original game", Windows
+  alone). The release packages made again, their hashes in font-converter.md section 6.
+
+**Corrected 2026-11-09:** the release zip's `README.txt` and notices, and the fonts'
+download readme, still named KMRP's repository as the home of the source and the fonts
+after the move. They now name this one; the fonts' zip was made again with the new
+readme (its 14 files otherwise the repository's, byte for byte). `make_zip.py` wrote
+`KMRP-Original-HD-Fonts-1.600.zip` while the committed zip is named without the
+version; it now writes the committed name.
+
+## [1.0.0] - 2026-11-13: KMRP Font Converter
+
+Released 2026-11-13 as GitHub release
+[`v1.0.0`](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/v1.0.0)
+(its tag on `11b1bf6`): the Windows exe and zip, the macOS DMG and the x86_64 AppImage,
+with their hashes and how each was checked in font-converter.md section 6. Planned until
+then for the same day as KMRP 1.6.0 and the KOTOR Modern Gamesave Editor (the
 maintainer, 2026-11-08). The Windows exe is 11,238,912 bytes, SHA-256
 `DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348`, built deterministically
 from this repository; it and the other packages, and how they were checked, are in
@@ -94,7 +129,8 @@ from this repository; it and the other packages, and how they were checked, are 
   same day:* the rewrite first also made an aarch64 AppImage, from the request's "intel and
   silicon", which was meant for the Mac; it was never run, and on a Steam Deck (x86_64) it
   does not start ("Exec format error").
-- **Not yet run:** the macOS app (type-checked for both architectures, not built). The x86_64
+- **Not yet run:** the macOS app (type-checked for both architectures, not built until
+  2026-11-13, when the maintainer made the DMG on a Mac; read on Windows, not run). The x86_64
   AppImage converted fonts under WSL's Ubuntu 20.04, and on a Steam Deck's SteamOS (glibc
   2.41, Wayland), where its window also opened and found Steam's KOTOR Override folder
   (2026-11-09).
@@ -132,31 +168,3 @@ from this repository; it and the other packages, and how they were checked, are 
 Rust rewrite this also said "run under Proton or Wine": the C# program was never tried
 there, and the Rust one runs natively instead.) In the game, not yet
 looked at: the HUD's numbers, the end credits and Menu Large.
-
-### KMRP Original HD fonts 1.600
-
-The 11 OpenType files and the collection listed with their hashes in
-[fonts/README.md](fonts/README.md) section 1; the download is
-`fonts/release-kit/KMRP-Original-HD-Fonts.zip`.
-
-- 2026-11-13: a press kit for the fonts on their own, without the converter
-  (`fonts/release-kit/press-kit`, drawn by `fonts/release-kit/make_press_kit.py` from the
-  font files): cover, the family, two outlines, the character set, kerning, which font is
-  which, and press text in its README.
-
-### Repository
-
-- 2026-11-08: the converter and the fonts moved here from KMRP's repository, history
-  kept. KMRP keeps its HD Font atlases, drawn from these fonts.
-- 2026-11-09: the press kit, in the converter's own style; the README's logo; the
-  documentation standard imported from KMRP's, with KMRP's link checker; this changelog.
-- 2026-11-13: the press kit's cover says the converter works with KMRP 1.6 and vanilla KOTOR,
-  on Windows, macOS and Linux (until then "For KMRP 1.6 or the original game", Windows
-  alone). The release packages made again, their hashes in font-converter.md section 6.
-
-**Corrected 2026-11-09:** the release zip's `README.txt` and notices, and the fonts'
-download readme, still named KMRP's repository as the home of the source and the fonts
-after the move. They now name this one; the fonts' zip was made again with the new
-readme (its 14 files otherwise the repository's, byte for byte). `make_zip.py` wrote
-`KMRP-Original-HD-Fonts-1.600.zip` while the committed zip is named without the
-version; it now writes the committed name.

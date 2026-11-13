@@ -38,7 +38,8 @@ DirectWrite. The build this document describes from here on: 1.0.0, Windows exe 
 bytes, SHA-256 `DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348`. What
 changed in what it writes is measured in section 9. **Not yet seen in the game:** any font
 the Rust program wrote; the game sightings above are of the C# program's fonts. **Not yet
-run:** the macOS app (no Mac here). The aarch64 AppImage was never run before it was
+run:** the macOS app (no Mac here); its DMG was made on a Mac on 2026-11-13 and read here
+(section 6), not run. **Released** 2026-11-13 as GitHub release `v1.0.0` (section 6). The aarch64 AppImage was never run before it was
 dropped. The Linux window: seen on a Steam Deck's SteamOS on 2026-11-09 (section 7).
 
 ## 1. Files
@@ -388,7 +389,35 @@ These are the packages for the release; the zip and AppImage rows above are supe
 | `KOTOR-Font-Converter-1.0.0-Windows-x64.exe` | 11,238,912 | `DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348` |
 | `KOTOR-Font-Converter-1.0.0-Windows-x64.zip` | 5,663,775 | `1D88939E3DD0EA0AFAB2BF3AA4B42D48FE144AA2B44A77CE06A6474237DF5840` |
 | `KOTOR-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 6,707,704 | `1067308AE8E93BC04B9635691784A0A0DF49C6171BCC4620D8F29F338365468E` |
-| `KOTOR-Font-Converter-1.0.0-macOS.dmg` | not yet made | to be made by the maintainer on a Mac with `build-macos.sh` |
+| `KOTOR-Font-Converter-1.0.0-macOS.dmg` | 10,633,337 | `32A5C78CA96800932C4D1F1EC896D5B0F600413AFE7F8536B075F1710DC1C760` |
+
+The DMG was made by the maintainer on a Mac with `build-macos.sh` on 2026-11-13 (its HFS+
+volume created 21:37:18), after the DMG window of commit `55a745f`; the output of the
+script's own checks was not recorded here. Read on Windows the same day with 7-Zip 21.07 and
+a Mach-O header reader (not run: no Mac here):
+
+| Inside the DMG | Found |
+| --- | --- |
+| Files | `KOTOR-Font-Converter-1.0.0-macOS.app`, a link `Applications` to `/Applications`, `README.txt`, `LICENSE.txt`, `OFL.txt`, `THIRD-PARTY-NOTICES.txt`, the window's `.background/background.tiff` (720x500, two images) |
+| The four text files | the zip's, byte for byte, but `README.txt` with LF line ends instead of CR LF |
+| `Info.plist` | `com.raymangt.kmrp-font-converter`, version 1.0.0, `LSMinimumSystemVersion` 11.0, `NSHighResolutionCapable` |
+| The program | Universal 2: x86_64 (9,501,488 bytes) and arm64 (8,125,488), each built for macOS 11.0 with SDK 27.0 |
+| Libraries loaded | only `/System/Library/Frameworks/...` and `/usr/lib/...` (libSystem, libobjc, libiconv) |
+| Paths of the Mac | none (`/Users/` does not occur) |
+| Signature | ad hoc on both (CodeDirectory flag 0x2, no certificate), not notarized |
+
+**Released 2026-11-13** as GitHub release
+[`v1.0.0`](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/v1.0.0),
+its tag on commit `11b1bf6`: the Windows exe and zip, the macOS DMG and the x86_64 AppImage
+of the table above, each the size and SHA-256 above in GitHub's own digest of the upload.
+The same day, before the upload: the exe and zip and the AppImage matched their rows here;
+`Test-FontConverter.py --exe` on the exe passed every check (0.7 to 0.9 s for KMRP and 0.4
+to 0.6 s for the original game); and the AppImage, under WSL's Ubuntu 20.04, converted the
+dialogue tile from KMRP's Dialogue OTF for both versions (`--convert --exit`, exit code 0,
+4 files each), linking only glibc, libm, libpthread and libdl, glibc 2.30 at most. The
+packaged readme's "right-click it and choose Open" for the first start on macOS is what
+works before macOS 15; on 15 and later Apple's own way is Privacy & Security's Open
+Anyway (Apple's documentation, not tried here). The release notes give both; the readme in the packages gives the first only.
 
 The zip and the AppImages hold file times, so they differ at every build; the Windows exe
 inside does not. The exe is 13.4 times the C# one's 840,192 bytes: the window's toolkit with
