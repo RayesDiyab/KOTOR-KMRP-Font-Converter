@@ -11,7 +11,7 @@ Five pages, in the order to show them.
 
 | File | What |
 | --- | --- |
-| [`01-cover.png`](01-cover.png) | Cover: Font Converter 1.0, its three steps, the font files it reads, four sample tiles (Georgia, Arial, Consolas, KMRP Original HD) |
+| [`01-cover.png`](01-cover.png) | Cover: Font Converter 1.0, its three steps, the font files it reads, that it works with KMRP 1.6 and vanilla KOTOR, on Windows, macOS and Linux, four sample tiles (Georgia, Arial, Consolas, KMRP Original HD) |
 | [`02-the-converter.png`](02-the-converter.png) | The converter's window, five fonts picked, KMRP chosen, 1600x900 |
 | [`03-original-game.png`](03-original-game.png) | Original game: the main menu in the game's own font beside the same menu in Georgia, 1280x960 |
 | [`04-conversations.png`](04-conversations.png) | Original game: a conversation and its replies in Georgia, 1280x960 |
@@ -40,3 +40,10 @@ Five pages, in the order to show them.
   reduced to 2000x837 before it reached this folder, with Georgia made for KMRP in Override.
   It was taken before KMRP's Modded Font row existed, so the page shows HD Font chosen.
 - The screenshots themselves are kept out of the repository (`build/press-kit-shots`).
+
+*Changed 2026-11-13:* the cover's foot says "Works with KMRP 1.6 and vanilla KOTOR" and
+"Windows, macOS, Linux" (the maintainer: "say it works with kmrp and vanilla kotor and also
+it has linux, windows and macos support"). Until then it said "For KMRP 1.6 or the original
+game", and Windows alone, from before the Rust rewrite. The other four pages came out byte
+for byte as before. The macOS and Linux programs are not in any frame: every screenshot is
+of Windows.

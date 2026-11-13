@@ -193,8 +193,12 @@ def make_cover():
         cx += chip(canvas, cx, 752, n, words, colour, filled) + 18
 
     draw = ImageDraw.Draw(canvas)
-    draw.text((110, 912), "TTF \u00b7 OTF \u00b7 TTC \u00b7 WOFF \u00b7 WOFF2", font=face("Menu", 32), fill=GOLD, anchor="ls")
-    draw.text((110, 968), "For KMRP 1.6 or the original game  \u00b7  Windows  \u00b7  Free, GPL", font=face("Descriptions", 28),
+    draw.text((110, 900), "TTF \u00b7 OTF \u00b7 TTC \u00b7 WOFF \u00b7 WOFF2", font=face("Menu", 32), fill=GOLD, anchor="ls")
+    # What it works with and where it runs (2026-11-13, the maintainer: "say it works with kmrp
+    # and vanilla kotor and also it has linux, windows and macos support"); until then one line,
+    # "For KMRP 1.6 or the original game, Windows, Free, GPL".
+    draw.text((110, 952), "Works with KMRP 1.6 and vanilla KOTOR", font=face("Descriptions", 30), fill=TEXT, anchor="ls")
+    draw.text((110, 996), "Windows  \u00b7  macOS  \u00b7  Linux  \u00b7  Free, GPL", font=face("Descriptions", 28),
               fill=MUTED, anchor="ls")
 
     tx, tw, th, gap = 1250, 580, 176, 26

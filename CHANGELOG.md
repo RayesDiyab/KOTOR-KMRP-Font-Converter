@@ -145,6 +145,9 @@ The 11 OpenType files and the collection listed with their hashes in
   kept. KMRP keeps its HD Font atlases, drawn from these fonts.
 - 2026-11-09: the press kit, in the converter's own style; the README's logo; the
   documentation standard imported from KMRP's, with KMRP's link checker; this changelog.
+- 2026-11-13: the press kit's cover says the converter works with KMRP 1.6 and vanilla KOTOR,
+  on Windows, macOS and Linux (until then "For KMRP 1.6 or the original game", Windows
+  alone). The release packages made again, their hashes in font-converter.md section 6.
 
 **Corrected 2026-11-09:** the release zip's `README.txt` and notices, and the fonts'
 download readme, still named KMRP's repository as the home of the source and the fonts

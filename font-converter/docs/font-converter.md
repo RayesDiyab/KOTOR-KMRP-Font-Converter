@@ -377,6 +377,19 @@ to the download from WSL. The macOS app was not made: that needs a Mac.
 | `KOTOR-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 6,707,704 | `503466BEA4A8556EC59C116DBE304BE50F067297B8ABD68B0BADE0E0BC298201` |
 | `KOTOR-Font-Converter-1.0.0-Linux-aarch64.AppImage` (dropped 2026-11-09, not to be released) | 6,289,928 | `437F78095C31BAE3FABEB262F553EB9DCC140F4661936BD3ABA6A8C3315E3DF0` |
 
+Made again for the release on 2026-11-13, from commit a6b9d50, the same way (cargo-zigbuild
+0.24.1 with zig 0.17.1, both from pip). The exe came out byte for byte the one above, and the
+regression test passed on it. The x86_64 AppImage, packed by the new `build-linux.sh
+--pack-only`, converted for both versions under Ubuntu 20.04 and needs glibc 2.30 or newer.
+These are the packages for the release; the zip and AppImage rows above are superseded:
+
+| Package (1.0.0, Rust, 2026-11-13) | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `KOTOR-Font-Converter-1.0.0-Windows-x64.exe` | 11,238,912 | `DF4B6178C7D7A507BAFE6CAE094A098D5516643487AA9DF20C1F34971582A348` |
+| `KOTOR-Font-Converter-1.0.0-Windows-x64.zip` | 5,663,775 | `1D88939E3DD0EA0AFAB2BF3AA4B42D48FE144AA2B44A77CE06A6474237DF5840` |
+| `KOTOR-Font-Converter-1.0.0-Linux-x86_64.AppImage` | 6,707,704 | `1067308AE8E93BC04B9635691784A0A0DF49C6171BCC4620D8F29F338365468E` |
+| `KOTOR-Font-Converter-1.0.0-macOS.dmg` | not yet made | to be made by the maintainer on a Mac with `build-macos.sh` |
+
 The zip and the AppImages hold file times, so they differ at every build; the Windows exe
 inside does not. The exe is 13.4 times the C# one's 840,192 bytes: the window's toolkit with
 its two renderers, the font reader, the C runtime and the two window fonts are now inside it
