@@ -151,6 +151,23 @@ measurements against the atlases and the rejected methods are in
 **[fonts 1.0 release](https://github.com/RayesDiyab/KOTOR-KMRP-Font-Converter/releases/tag/fonts-v1.0)**
 (2026-11-13), the zip made from [fonts/release-kit](fonts/release-kit/README.txt).
 
+<img src="fonts/release-kit/press-kit/01-cover.png" alt="KMRP Original HD Fonts 1.0: the title and five sample lines in the game's text colours" width="100%">
+
+<img src="fonts/release-kit/press-kit/02-the-family.png" alt="All 11 fonts, one sample line each" width="100%">
+
+<img src="fonts/release-kit/press-kit/03-drawn-not-traced.png" alt="Menu's R and Dialogue's g as outlines: straight edges, arcs, points and handles" width="100%">
+
+<img src="fonts/release-kit/press-kit/04-characters.png" alt="Every character of Dialogue, Windows-1252" width="100%">
+
+<img src="fonts/release-kit/press-kit/05-kerning.png" alt="Lines in Dialogue and Menu without and with the fonts' kerning" width="100%">
+
+<img src="fonts/release-kit/press-kit/06-which-font.png" alt="Which font is which game font, and what the game uses it for" width="100%">
+
+<img src="fonts/release-kit/KMRP-Original-HD-Fonts-comparison.png" alt="The game's own font textures enlarged beside the HD fonts at the same size" width="100%">
+
+Every page is drawn from the font files themselves; how, and the press text, are in the
+[fonts' press kit README](fonts/release-kit/press-kit/README.md).
+
 ## Build from source
 
 Building is only needed to change the program; players run the released packages.
